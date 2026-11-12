@@ -2,11 +2,43 @@
 <html lang="id-ID">
 <head>
   <meta charset="utf-8">
-  <!-- Prototype Hook for Autoplay Video Intro (Mobile Legends Style) & Anti-Zoom Static Lock -->
+  <!-- Prototype Hook for Autoplay Video Intro & Anti-Zoom Static Lock & Storage Reset -->
   <script>
-    window.__starlaUserInteracted = false;
     (function() {
-      // 1. Prototype hook for HTMLMediaElement.prototype.play
+      // 1. Storage wipe on fresh access (Fresh start every access, Slide 1 / Intro Video)
+      try {
+        var wipe = function(store) {
+          if (!store) return;
+          var remove = [];
+          for (var i = 0; i < store.length; i++) {
+            var key = store.key(i);
+            if (key) {
+              var k = key.toLowerCase();
+              if (k.indexOf('suspend') !== -1 || k.indexOf('resume') !== -1 ||
+                  k.indexOf('starla') !== -1 || k.indexOf('5jpg') !== -1 ||
+                  k.indexOf('5foc') !== -1 || k.indexOf('articulate') !== -1 ||
+                  k.indexOf('storyline') !== -1) {
+                remove.push(key);
+              }
+            }
+          }
+          remove.forEach(function(k) { store.removeItem(k); });
+        };
+        wipe(window.localStorage);
+        wipe(window.sessionStorage);
+      } catch(e){}
+
+      window.addEventListener('beforeunload', function() {
+        try {
+          localStorage.removeItem('suspend_data');
+          localStorage.removeItem('starla_mlbb_session_v2');
+          localStorage.removeItem('starla_mlbb_session_v1');
+          sessionStorage.clear();
+        } catch(e){}
+      });
+
+      // 2. Prototype hook for HTMLMediaElement.prototype.play
+      window.__starlaUserInteracted = false;
       var origPlay = HTMLMediaElement.prototype.play;
       HTMLMediaElement.prototype.play = function() {
         if (!window.__starlaUserInteracted && (this instanceof HTMLVideoElement || (this.tagName && this.tagName.toUpperCase() === 'VIDEO'))) {
@@ -18,7 +50,7 @@
         return origPlay.apply(this, arguments);
       };
 
-      // 2. Strict Screen Locking (Anti-Zoom)
+      // 3. Strict Screen Locking (Anti-Zoom)
       // Prevent multi-touch pinch zoom
       document.addEventListener('touchmove', function(e) {
         if (e.touches && e.touches.length > 1) {
@@ -59,7 +91,7 @@
         }
       }, { passive: false });
 
-      // Prevent Ctrl/Cmd + (+, -, 0) keyboard zoom
+      // Prevent Ctrl/Cmd + (+, -, 0, =) keyboard zoom
       window.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && (
           e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0' ||
@@ -71,74 +103,24 @@
       }, false);
     })();
 
-    function __starlaGlobalInteractionHandler() {
-      if (window.__starlaUserInteracted) return;
-      window.__starlaUserInteracted = true;
-
-      // 1. Unmute & play all active video and audio
-      var mediaEls = document.querySelectorAll('video, audio');
-      mediaEls.forEach(function(el) {
-        try {
-          el.muted = false;
-          el.volume = 1;
-          var p = el.play();
-          if (p && typeof p.catch === 'function') p.catch(function(){});
-        } catch(e){}
-      });
-
-      // 2. Resume all AudioContext
-      try {
-        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (window.__storyAudioCtx && window.__storyAudioCtx.state === 'suspended') {
-          window.__storyAudioCtx.resume();
-        }
-        if (window.DS && window.DS.audioContext) {
-          if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
-          if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
-            window.DS.audioContext.ctx.resume();
-          }
-        }
-      } catch(e){}
-
-      // 3. Request fullscreen & landscape orientation on touch / mobile devices
-      try {
-        var isTouchOrMobile = (window.isMobile && window.isMobile.any) ||
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
-        if (isTouchOrMobile) {
-          var docEl = document.documentElement;
-          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-          if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
-            var pr = rfs.call(docEl);
-            if (pr && pr.catch) pr.catch(function(){});
-          }
-          if (screen.orientation && typeof screen.orientation.lock === 'function') {
-            screen.orientation.lock('landscape').catch(function(){});
-          }
-        }
-      } catch(e){}
-
-      // 4. Hide floating sound pill
-      var pill = document.getElementById('starla-sound-pill');
-      if (pill) {
-        pill.classList.add('hidden');
-        pill.style.display = 'none';
+    // Resize events on load & triggers
+    window.addEventListener('resize', function() {
+      if (window.StarlaBudaya && typeof window.StarlaBudaya.updateOrientationAlert === 'function') {
+        window.StarlaBudaya.updateOrientationAlert();
       }
-
-      // 5. Dispatch resize to ensure accurate frame scaling
-      window.dispatchEvent(new Event('resize'));
-
-      // Remove one-time listeners
-      ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(function(evt) {
-        window.removeEventListener(evt, __starlaGlobalInteractionHandler, true);
+    });
+    window.addEventListener('orientationchange', function() {
+      setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+    });
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
+      document.addEventListener(evt, function() {
+        if (window.StarlaBudaya && typeof window.StarlaBudaya.updateFullscreenIcon === 'function') {
+          window.StarlaBudaya.updateFullscreenIcon();
+        }
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
       });
-    }
-
-    ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(function(evt) {
-      window.addEventListener(evt, __starlaGlobalInteractionHandler, true);
     });
 
-    // Schedule periodic resize events during first 2.5 seconds for Storyline canvas auto-scale
     [50, 150, 300, 500, 800, 1200, 1600, 2000, 2500].forEach(function(delay) {
       setTimeout(function() {
         window.dispatchEvent(new Event('resize'));
@@ -183,7 +165,7 @@
     }
   </style>
 
-  <script>
+<script>
     window.DS = {};
     window.globals = {
       DATA_PATH_BASE: '',
@@ -241,7 +223,7 @@
   <script>window.THREE = { };</script>
 
     <!-- STARLA Budaya - Mobile Legends Game Architecture & Nusantara Styles -->
-  <style id="starla-mlbb-game-styles">
+  <style id="starla-styles">
     /* 1. Global Reset & Frameless Viewport */
     html, body {
       margin: 0;
@@ -297,17 +279,14 @@
 
     /* 4. Complete Non-Destructive Suppression of Native Articulate Modals */
     #mobile-start-container,
-    .mobile-start-overlay {
-      background: transparent !important;
-      display: none !important;
-      pointer-events: none !important;
-    }
-
+    .mobile-start-overlay,
     .mobile-start-course-title,
     .mobile-start-overlay-thumbnail,
     .mobile-start-resume-text,
     .mobile-load-title-overlay {
+      background: transparent !important;
       display: none !important;
+      pointer-events: none !important;
     }
 
     #mobile-start-button {
@@ -327,24 +306,30 @@
       visibility: hidden !important;
     }
 
-    /* 5. Starla Nusantara Motion Preloader Layer */
-    #starla-nusantara-loader {
+    /* 5. Hyper-Realistic Front Stage (Motion Loading + 1 Start Button) */
+    #starla-front-stage {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100dvh;
       z-index: 2147483646;
-      background: radial-gradient(ellipse at 50% 38%, #141b2f 0%, #0d1222 55%, #07090f 100%);
+      background: radial-gradient(ellipse at 50% 36%, #131c31 0%, #0a0f1d 48%, #050811 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
-      transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .starla-volumetric-backdrop {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 28%, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0) 65%);
+      pointer-events: none;
     }
 
     .starla-batik-pattern {
@@ -354,27 +339,27 @@
                         radial-gradient(rgba(245, 158, 11, 0.08) 1.5px, transparent 1.5px);
       background-size: 36px 36px;
       background-position: 0 0, 18px 18px;
-      opacity: 0.45;
+      opacity: 0.42;
       pointer-events: none;
     }
 
     .starla-ambient-glow {
       position: absolute;
-      width: 420px;
-      height: 420px;
+      width: 440px;
+      height: 440px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.24) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 75%);
-      filter: blur(36px);
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.26) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 75%);
+      filter: blur(40px);
       animation: starlaAuraPulse 3.5s ease-in-out infinite alternate;
       pointer-events: none;
     }
 
     @keyframes starlaAuraPulse {
       0% { transform: scale(0.92); opacity: 0.65; }
-      100% { transform: scale(1.15); opacity: 0.95; }
+      100% { transform: scale(1.16); opacity: 0.98; }
     }
 
-    .starla-loader-content {
+    .starla-stage-content {
       position: relative;
       z-index: 3;
       display: flex;
@@ -397,6 +382,20 @@
       margin-bottom: 22px;
     }
 
+    .starla-specular-beam {
+      position: absolute;
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle, rgba(254, 240, 138, 0.18) 0%, transparent 60%);
+      animation: starlaBeamShimmer 4s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes starlaBeamShimmer {
+      0% { opacity: 0.3; transform: scale(0.88); }
+      100% { opacity: 0.85; transform: scale(1.12); }
+    }
+
     .starla-mandala-ring {
       position: absolute;
       width: 100%;
@@ -416,7 +415,7 @@
       height: 112px;
       z-index: 2;
       animation: starlaGununganBob 3s ease-in-out infinite;
-      filter: drop-shadow(0 8px 24px rgba(245, 158, 11, 0.6));
+      filter: drop-shadow(0 10px 28px rgba(245, 158, 11, 0.65));
     }
 
     @keyframes starlaGununganBob {
@@ -449,51 +448,59 @@
     }
 
     .starla-title {
-      font-size: 26px;
+      font-size: 27px;
       font-weight: 900;
-      letter-spacing: 5px;
+      letter-spacing: 5.5px;
       text-transform: uppercase;
       margin: 0 0 6px 0;
-      background: linear-gradient(135deg, #ffffff 0%, #fef08a 35%, #fbbf24 70%, #d97706 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #fef08a 32%, #fbbf24 68%, #d97706 92%, #92400e 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 2px 14px rgba(245, 158, 11, 0.5));
+      filter: drop-shadow(0 3px 16px rgba(245, 158, 11, 0.55));
       text-align: center;
     }
 
     .starla-tagline {
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 1.4px;
+      letter-spacing: 1.5px;
       color: #94a3b8;
       text-transform: uppercase;
       text-align: center;
     }
 
     .starla-progress-box {
-      width: 280px;
+      width: 290px;
       max-width: 82vw;
       margin: 0 auto;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .starla-progress-box.starla-box-hidden {
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+      display: none;
     }
 
     .starla-progress-track {
       width: 100%;
-      height: 6px;
+      height: 7px;
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      border: 1px solid rgba(245, 158, 11, 0.45);
       border-radius: 999px;
       overflow: hidden;
       margin-bottom: 10px;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.2);
     }
 
     .starla-progress-fill {
       width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #fef08a 100%);
+      background: linear-gradient(90deg, #b45309 0%, #d97706 30%, #f59e0b 70%, #fef08a 100%);
       border-radius: 999px;
-      box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
-      transition: width 0.22s ease-out;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.95);
+      transition: width 0.2s ease-out;
     }
 
     .starla-progress-info {
@@ -515,130 +522,100 @@
       letter-spacing: 0.5px;
     }
 
-    /* 6. Mobile Legends Floating Game HUD Banner (Auto-Resume Notification) */
-    .starla-hud-banner {
-      position: fixed;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%) translateY(0);
-      z-index: 99995;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(11, 19, 43, 0.94);
-      border: 1px solid rgba(245, 158, 11, 0.65);
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75), 0 0 22px rgba(245, 158, 11, 0.3);
-      border-radius: 999px;
-      padding: 8px 20px 8px 16px;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      user-select: none;
-      -webkit-user-select: none;
-      max-width: 90vw;
-      box-sizing: border-box;
-      pointer-events: auto;
-    }
-
-    .starla-hud-banner.starla-hud-hidden {
-      transform: translateX(-50%) translateY(-120px);
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .starla-hud-badge {
+    /* 6. Tactile Glass-Gold Bevel Single Start Button (#starla-start-btn) */
+    .starla-start-btn {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: #0b132b;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 999px;
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
-      flex-shrink: 0;
-    }
-
-    .starla-hud-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: #e2e8f0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .starla-hud-name {
-      color: #60a5fa;
-      font-weight: 700;
-    }
-
-    .starla-hud-school {
-      color: #fbbf24;
-      font-weight: 600;
-    }
-
-    /* 7. Floating Sound Pill (Smart Autoplay Cascade) */
-    .starla-sound-pill {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2147483647 !important;
-      display: flex;
-      align-items: center;
       justify-content: center;
+      gap: 12px;
+      padding: 15px 52px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fef08a 0%, #f59e0b 38%, #d97706 78%, #b45309 100%);
+      border: 1.5px solid #fef08a;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+        0 2px 0 #78350f,
+        0 8px 24px rgba(217, 119, 6, 0.7),
+        0 16px 40px rgba(0, 0, 0, 0.75);
+      color: #1a0f00;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
       cursor: pointer;
+      outline: none;
+      overflow: hidden;
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      pointer-events: auto;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.45s ease;
+      animation: starlaBtnPulse 2.4s infinite ease-in-out;
     }
 
-    .starla-sound-pill.hidden {
+    .starla-start-btn.starla-btn-hidden {
       display: none !important;
       opacity: 0 !important;
-      visibility: hidden !important;
       pointer-events: none !important;
+      transform: scale(0.92);
     }
 
-    .starla-sound-card {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(11, 19, 43, 0.94);
-      border: 1.5px solid rgba(245, 158, 11, 0.85);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 22px rgba(245, 158, 11, 0.45);
-      border-radius: 999px;
-      padding: 12px 24px;
-      color: #fbbf24;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      animation: starlaSoundPillPulse 2s infinite ease-in-out;
+    .starla-start-btn:hover {
+      transform: scale(1.04) translateY(-2px);
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+        0 3px 0 #78350f,
+        0 12px 30px rgba(245, 158, 11, 0.85),
+        0 20px 48px rgba(0, 0, 0, 0.85);
     }
 
-    @keyframes starlaSoundPillPulse {
+    .starla-start-btn:active {
+      transform: scale(0.97) translateY(2px);
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+        0 1px 0 #78350f,
+        0 4px 14px rgba(217, 119, 6, 0.5),
+        0 8px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .starla-btn-shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+      transform: skewX(-25deg);
+      animation: starlaShimmerSweep 3s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes starlaShimmerSweep {
+      0% { left: -100%; }
+      35%, 100% { left: 160%; }
+    }
+
+    @keyframes starlaBtnPulse {
       0%, 100% {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 16px rgba(245, 158, 11, 0.35);
         transform: scale(1);
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+          0 2px 0 #78350f,
+          0 8px 24px rgba(217, 119, 6, 0.7),
+          0 16px 40px rgba(0, 0, 0, 0.75);
       }
       50% {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 28px rgba(245, 158, 11, 0.7);
         transform: scale(1.03);
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+          0 2px 0 #78350f,
+          0 12px 32px rgba(245, 158, 11, 0.92),
+          0 20px 48px rgba(0, 0, 0, 0.85);
       }
     }
 
-    /* 8. Smart Orientation Notification (Mobile Portrait) */
+    /* 7. Smart Orientation Notification (Mobile Portrait) */
     .smart-orientation-alert {
       position: fixed;
       top: 16px;
@@ -717,10 +694,10 @@
       line-height: 1.4;
     }
 
-    /* 9. Game Blur Mode for Feedback Layers (Benar & Salah) */
+    /* 8. Background States Full Layar Sharp (border-radius: 0 !important) */
     .slide-layer:not(.base-layer) {
-      border-radius: 16px !important;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      border-radius: 0 !important;
+      transition: all 0.25s ease-out !important;
     }
 
     .slide-layer:not(.base-layer).starla-feedback-benar {
@@ -732,6 +709,7 @@
       backdrop-filter: blur(14px) saturate(140%) !important;
       -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
       border: 2px solid rgba(46, 204, 113, 0.85) !important;
+      border-radius: 0 !important;
       box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 25px rgba(245, 158, 11, 0.45) !important;
     }
 
@@ -744,7 +722,39 @@
       backdrop-filter: blur(14px) saturate(140%) !important;
       -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
       border: 2px solid rgba(231, 76, 60, 0.85) !important;
+      border-radius: 0 !important;
       box-shadow: 0 0 35px rgba(231, 76, 60, 0.6), inset 0 0 25px rgba(230, 126, 34, 0.45) !important;
+    }
+
+    /* Fallback Full-Screen Backdrop for feedback layers or states without background image */
+    #starla-state-backdrop,
+    .starla-state-backdrop {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0 !important;
+      background: rgba(7, 11, 20, 0.78);
+      backdrop-filter: blur(14px) saturate(135%);
+      -webkit-backdrop-filter: blur(14px) saturate(135%);
+      pointer-events: none;
+      z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #starla-state-backdrop.active,
+    .starla-state-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .layer-modal-bg {
+      border-radius: 0 !important;
+      background: rgba(7, 11, 20, 0.78) !important;
+      backdrop-filter: blur(14px) saturate(135%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
     }
 
     .slide-layer:not(.base-layer) .vectorshape,
@@ -753,25 +763,67 @@
       filter: none !important;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* 9. Top-Right Transparent Fullscreen Icon (#starla-fs-btn) */
+    #starla-fs-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 38px;
+      height: 38px;
+      z-index: 99998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.24);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #fbbf24;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: opacity 0.35s ease, background 0.2s ease, transform 0.15s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #starla-fs-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #starla-fs-btn:hover {
+      background: rgba(15, 23, 42, 0.45);
+      border-color: rgba(251, 191, 36, 0.55);
+      transform: scale(1.06);
+    }
+
+    #starla-fs-btn:active {
+      transform: scale(0.94);
+    }
   </style>
 </head>
 <body style="background: #07090f" class="cs-HTML theme-classic">
   <!-- ========================================================================= -->
-  <!-- STARLA NUSANTARA PRELOADER (Motion Studio Loader & Asset Warmer)          -->
+  <!-- STARLA FRONT STAGE (Hyper-Realistic Motion Loading + 1 Start Button)      -->
   <!-- ========================================================================= -->
-  <div id="starla-nusantara-loader" class="starla-nusantara-loader" role="progressbar" aria-label="Memuat STARLA Budaya" aria-live="polite">
-    <!-- Ambient Batik Kawung Geometric Backdrop -->
+  <div id="starla-front-stage" class="starla-front-stage" role="region" aria-label="STARLA Budaya Front Stage">
+    <div class="starla-volumetric-backdrop" aria-hidden="true"></div>
     <div class="starla-batik-pattern" aria-hidden="true"></div>
     <div class="starla-ambient-glow" aria-hidden="true"></div>
 
-    <div class="starla-loader-content">
-      <!-- Nusantara Gunungan & Kawung Mandala SVG Emblem -->
+    <div class="starla-stage-content">
+      <!-- Ornamen 3D-glass Gunungan & Mandala Kawung emas metalik -->
       <div class="starla-emblem-wrap">
+        <div class="starla-specular-beam" aria-hidden="true"></div>
+
         <!-- Rotating Kawung Mandala Ring -->
         <svg class="starla-mandala-ring" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="100" cy="100" r="92" stroke="url(#goldRingGrad)" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
           <circle cx="100" cy="100" r="84" stroke="url(#goldRingGrad)" stroke-width="1" opacity="0.4"/>
-          <!-- 8-petal Kawung motif -->
           <g stroke="url(#goldRingGrad)" stroke-width="1.2" opacity="0.75" fill="none">
             <ellipse cx="100" cy="65" rx="16" ry="26"/>
             <ellipse cx="100" cy="135" rx="16" ry="26"/>
@@ -782,7 +834,6 @@
             <ellipse cx="75" cy="125" rx="18" ry="24" transform="rotate(-45 75 125)"/>
             <ellipse cx="125" cy="125" rx="18" ry="24" transform="rotate(45 125 125)"/>
           </g>
-          <!-- Radiating Accents -->
           <circle cx="100" cy="100" r="48" stroke="url(#goldRingGrad)" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
           <circle cx="100" cy="8" r="3" fill="#fbbf24"/>
           <circle cx="100" cy="192" r="3" fill="#fbbf24"/>
@@ -797,7 +848,7 @@
           </defs>
         </svg>
 
-        <!-- Center Golden Gunungan Silhouette with Pulsing Core -->
+        <!-- Center Golden Gunungan Silhouette with 3D Specular Shimmer Core -->
         <svg class="starla-gunungan-center" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
             <linearGradient id="gununganGold" x1="50%" y1="0%" x2="50%" y2="100%">
@@ -807,9 +858,16 @@
               <stop offset="85%" stop-color="#d97706"/>
               <stop offset="100%" stop-color="#78350f"/>
             </linearGradient>
+            <linearGradient id="gununganShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+              <stop offset="50%" stop-color="rgba(251,191,36,0.3)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </linearGradient>
           </defs>
           <path d="M60 4 C54 18 42 32 36 44 C30 55 22 66 16 80 C11 92 12 104 18 114 C24 124 36 130 60 134 C84 130 96 124 102 114 C108 104 109 92 104 80 C98 66 90 55 84 44 C78 32 66 18 60 4 Z"
                 fill="url(#gununganGold)" opacity="0.95"/>
+          <path d="M60 4 C54 18 42 32 36 44 C30 55 22 66 16 80 C11 92 12 104 18 114 C24 124 36 130 60 134 Z"
+                fill="url(#gununganShimmer)" opacity="0.45"/>
           <path d="M60 18 L60 126 M44 58 C52 52 68 52 76 58 M36 78 C48 70 72 70 84 78 M32 98 C46 90 74 90 88 98 M26 116 C44 108 76 108 94 116"
                 stroke="#07090f" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
           <circle cx="60" cy="38" r="4.5" fill="#07090f" opacity="0.9"/>
@@ -823,14 +881,14 @@
         <div class="starla-particle p4"></div>
       </div>
 
-      <!-- Nusantara Brand Title -->
+      <!-- Title & Subtitle -->
       <div class="starla-brand-group">
         <h1 class="starla-title">STARLA BUDAYA</h1>
         <div class="starla-tagline">Petualangan Interaktif Warisan Budaya Indonesia</div>
       </div>
 
-      <!-- Sleek Progress Track -->
-      <div class="starla-progress-box">
+      <!-- Pemuatan Progres (Real Asset & Engine Readiness Progress 0% - 100%) -->
+      <div id="starla-progress-box" class="starla-progress-box">
         <div class="starla-progress-track">
           <div id="starla-progress-fill" class="starla-progress-fill"></div>
         </div>
@@ -839,6 +897,15 @@
           <span id="starla-percent-text" class="starla-percent-text">0%</span>
         </div>
       </div>
+
+      <!-- 1 Tombol Mulai (Tactile Glass-Gold Bevel Button) -->
+      <button id="starla-start-btn" class="starla-start-btn starla-btn-hidden" type="button" aria-label="Mulai Petualangan">
+        <span class="starla-btn-shimmer" aria-hidden="true"></span>
+        <span class="starla-btn-text">MULAI</span>
+        <svg class="starla-btn-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -858,31 +925,32 @@
     </div>
   </div>
 
-  <!-- Mobile Legends Floating Game HUD Banner (Auto-Resume Notification) -->
-  <div id="starla-hud-banner" class="starla-hud-banner starla-hud-hidden" aria-live="polite">
-    <div class="starla-hud-badge">🎮 Melanjutkan Sesi:</div>
-    <div class="starla-hud-text">
-      Selamat datang kembali, <strong id="starla-hud-nama" class="starla-hud-name">Murid</strong> • <span id="starla-hud-sekolah" class="starla-hud-school">Sekolah</span>
-    </div>
-  </div>
+  <!-- Top-Right Transparent Fullscreen Icon -->
+  <button id="starla-fs-btn" class="starla-fs-btn" type="button" aria-label="Layar Penuh" title="Layar Penuh">
+    <svg id="starla-fs-icon-enter" class="starla-fs-icon-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+    </svg>
+    <svg id="starla-fs-icon-exit" class="starla-fs-icon-exit" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+    </svg>
+  </button>
 
-  <!-- Floating Sound Pill (Smart Autoplay Cascade) -->
-  <div id="starla-sound-pill" class="starla-sound-pill hidden" style="display: none;" role="button" tabindex="0" aria-label="Ketuk Layar untuk Suara">
-    <div class="starla-sound-card">
-      <span class="starla-sound-text">🔊 Ketuk Layar untuk Suara</span>
-    </div>
-  </div>
+  <!-- Fallback Full-Screen Backdrop for feedback layers or states -->
+  <div id="starla-state-backdrop" class="starla-state-backdrop" aria-hidden="true"></div>
 
-  <!-- STARLA Budaya - Nusantara Motion Preloader Controller -->
+  <!-- STARLA Budaya - Front Stage Motion Loading & Single Start Button Controller -->
   <script>
     (function() {
       'use strict';
       var startTime = Date.now();
-      var loaderEl = document.getElementById('starla-nusantara-loader');
+      var stageEl = document.getElementById('starla-front-stage');
+      var progressBox = document.getElementById('starla-progress-box');
       var fillEl = document.getElementById('starla-progress-fill');
       var statusEl = document.getElementById('starla-status-text');
       var percentEl = document.getElementById('starla-percent-text');
-      var isDismissed = false;
+      var startBtn = document.getElementById('starla-start-btn');
+      var isReady = false;
+      var isStarted = false;
       var currentProgress = 0;
 
       // Status messages
@@ -890,7 +958,7 @@
         { at: 0, text: 'Menyiapkan Petualangan Nusantara...' },
         { at: 35, text: 'Memuat Media Interaktif...' },
         { at: 70, text: 'Mengaktifkan Eksplorasi Murid...' },
-        { at: 98, text: 'Siap Menjelajah!' }
+        { at: 98, text: 'Siap Dimainkan!' }
       ];
 
       // Warm critical assets in background
@@ -938,46 +1006,19 @@
         return (presoReady || slideContainer) && playerReady;
       }
 
-      function dismissPreloader() {
-        if (isDismissed) return;
-        isDismissed = true;
-
+      function showStartButton() {
+        if (isReady) return;
+        isReady = true;
         updateProgress(100);
 
-        if (loaderEl) {
-          loaderEl.style.opacity = '0';
-          loaderEl.style.transform = 'scale(1.03)';
-          setTimeout(function() {
-            loaderEl.style.display = 'none';
-          }, 680);
-        }
-
-        // Trigger autoplay immediately upon preloader fade
-        if (window.StarlaGameEngine && typeof window.StarlaGameEngine.attemptVideoAutoplay === 'function') {
-          window.StarlaGameEngine.attemptVideoAutoplay();
-        } else {
-          var vids = document.querySelectorAll('video');
-          vids.forEach(function(v) {
-            try {
-              v.setAttribute('playsinline', '');
-              v.setAttribute('webkit-playsinline', '');
-              v.muted = true;
-              var p = v.play();
-              if (p && p.catch) p.catch(function(){});
-            } catch(e){}
-          });
-        }
-
-        // Show floating sound pill if audio is muted
-        if (!window.__starlaUserInteracted) {
-          var pill = document.getElementById('starla-sound-pill');
-          if (pill) {
-            pill.classList.remove('hidden');
-            pill.style.display = 'flex';
+        setTimeout(function() {
+          if (progressBox) {
+            progressBox.classList.add('starla-box-hidden');
           }
-        }
-
-        window.dispatchEvent(new Event('resize'));
+          if (startBtn) {
+            startBtn.classList.remove('starla-btn-hidden');
+          }
+        }, 220);
       }
 
       var timer = setInterval(function() {
@@ -992,39 +1033,107 @@
           if (ready || elapsed >= 2400) {
             updateProgress(100);
             clearInterval(timer);
-            setTimeout(dismissPreloader, 180);
+            showStartButton();
           } else {
             updateProgress(94);
           }
         }
       }, 50);
 
-      // Gesture capture on preloader to unlock audio & fullscreen/landscape immediately
-      if (loaderEl) {
-        loaderEl.addEventListener('click', function() {
-          if (typeof __starlaGlobalInteractionHandler === 'function') {
-            __starlaGlobalInteractionHandler();
+      // Handle Start Button click (Trusted User Gesture)
+      function handleStartAction() {
+        if (isStarted) return;
+        isStarted = true;
+        window.__starlaUserInteracted = true;
+
+        // 1. AudioContext unlock
+        try {
+          var AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!window.__storyAudioCtx && AudioCtx) {
+            window.__storyAudioCtx = new AudioCtx();
           }
-        });
-        loaderEl.addEventListener('touchend', function() {
-          if (typeof __starlaGlobalInteractionHandler === 'function') {
-            __starlaGlobalInteractionHandler();
+          if (window.__storyAudioCtx && window.__storyAudioCtx.state === 'suspended') {
+            window.__storyAudioCtx.resume();
           }
+          if (window.DS && window.DS.audioContext) {
+            if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
+            if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
+              window.DS.audioContext.ctx.resume();
+            }
+          }
+        } catch(e){}
+
+        // 2. Play all video and audio unmuted
+        var mediaEls = document.querySelectorAll('video, audio');
+        mediaEls.forEach(function(el) {
+          try {
+            el.muted = false;
+            el.volume = 1;
+            el.setAttribute('playsinline', '');
+            el.setAttribute('webkit-playsinline', '');
+            var p = el.play();
+            if (p && typeof p.catch === 'function') p.catch(function(){});
+          } catch(e){}
         });
+
+        // 3. Trigger native Storyline start buttons
+        var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
+        startBtns.forEach(function(b) {
+          try { b.click(); } catch(e){}
+        });
+        if (window.DS && window.DS.renderEngine && typeof window.DS.renderEngine.killPlayerPropertiesImagePreview === 'function') {
+          try { window.DS.renderEngine.killPlayerPropertiesImagePreview(); } catch(e){}
+        }
+
+        // 4. Mobile touch fullscreen & landscape lock
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+        if (isTouch) {
+          var docEl = document.documentElement;
+          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+          if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
+            var pr = rfs.call(docEl);
+            if (pr && pr.catch) pr.catch(function(){});
+          }
+          if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            try { screen.orientation.lock('landscape').catch(function(){}); } catch(e){}
+          }
+        }
+
+        // 5. Fade out #starla-front-stage cinematically
+        if (stageEl) {
+          stageEl.style.opacity = '0';
+          stageEl.style.transform = 'scale(1.02)';
+          setTimeout(function() {
+            stageEl.style.display = 'none';
+          }, 550);
+        }
+
+        // 6. Show fullscreen button in top right corner
+        var fsBtn = document.getElementById('starla-fs-btn');
+        if (fsBtn) {
+          fsBtn.classList.add('visible');
+        }
+
+        // 7. Dispatch resize event
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      if (startBtn) {
+        startBtn.addEventListener('click', handleStartAction);
+        startBtn.addEventListener('touchend', handleStartAction);
       }
     })();
   </script>
 
   <script>
     /**
-     * STARLA Budaya - Mobile Legends Game Engine Architecture
-     * Orchestrates instant autoplay, seamless auto-resume, certificate routing,
-     * account session tracking, and game blur feedback mode.
+     * STARLA Budaya - Core Game Architecture
+     * Orchestrates fullscreen handling, orientation alerts, in-memory active session tracking,
+     * auto-certificate routing, full-screen sharp feedback backdrops, and video autoplay.
      */
-    window.StarlaGameEngine = (function() {
+    window.StarlaBudaya = (function() {
       'use strict';
 
-      var STORAGE_KEY = 'starla_mlbb_session_v2';
       var SLIDE_SCENE_PREFIX = '_player.5sAEMI5psmg.';
 
       // Slide mapping (All validated from html5/data/js/data.js)
@@ -1040,7 +1149,7 @@
         GAME_CERT: '6WIqLhHr1Cm'
       };
 
-      // Benar & Salah Layer IDs for feedback game blur
+      // Benar & Salah Layer IDs for feedback game mode
       var FEEDBACK_LAYERS = {
         BENAR: [
           '5wLllNjELzq', '5dINY7oQloY', '6ozsIxVZ0Ap', '6IjgPGebEz0', '6QkcRhah4eX',
@@ -1052,21 +1161,18 @@
         ]
       };
 
-      // State variables
-      var state = {
-        session: null,
-        resumed: false,
-        lastKnownSlideId: null
+      // In-memory active run only (reset on reload)
+      window.__starlaActiveRun = {
+        accountKey: '',
+        nama: '',
+        sekolah: '',
+        kuisCompleted: false,
+        gameCompleted: false,
+        poin: 0,
+        score: 0
       };
 
-      // DOM Elements
-      var el = {
-        hudBanner: null,
-        hudNama: null,
-        hudSekolah: null,
-        soundPill: null,
-        orientationAlert: null
-      };
+      var lastKnownSlideId = null;
 
       // Normalization helper
       function normalize(str) {
@@ -1077,83 +1183,62 @@
         return normalize(nama) + '::' + normalize(sekolah);
       }
 
-      // Storage helpers
-      function loadSession() {
-        try {
-          var raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) {
-            raw = localStorage.getItem('starla_mlbb_session_v1');
-          }
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            if (parsed && parsed.nama && parsed.sekolah) {
-              if (!parsed.accountKey) {
-                parsed.accountKey = buildAccountKey(parsed.nama, parsed.sekolah);
-              }
-              return parsed;
-            }
-          }
-        } catch(e) {}
-        return null;
-      }
-
-      function saveSession(data) {
-        try {
-          if (!data) {
-            localStorage.removeItem(STORAGE_KEY);
-          } else {
-            data.updatedAt = Date.now();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          }
-        } catch(e) {}
-      }
-
       // Mobile device detector
       function isMobileDevice() {
         return (
           (window.isMobile && window.isMobile.any) ||
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) ||
+          (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
         );
       }
 
       // Orientation checker
       function updateOrientationAlert() {
-        if (!el.orientationAlert) return;
+        var alertEl = document.getElementById('smart-orientation-alert');
+        if (!alertEl) return;
         var isPortrait = window.innerHeight > window.innerWidth;
         if (isMobileDevice() && isPortrait) {
-          el.orientationAlert.classList.add('visible');
+          alertEl.classList.add('visible');
         } else {
-          el.orientationAlert.classList.remove('visible');
+          alertEl.classList.remove('visible');
         }
       }
 
-      // AudioContext Unlocker
-      function unlockAudioContext() {
-        try {
-          var AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) {
-            if (!window.__storyAudioCtx) {
-              window.__storyAudioCtx = new AudioCtx();
-            }
-            if (window.__storyAudioCtx.state === 'suspended') {
-              window.__storyAudioCtx.resume();
-            }
-            var buf = window.__storyAudioCtx.createBuffer(1, 1, 22050);
-            var src = window.__storyAudioCtx.createBufferSource();
-            src.buffer = buf;
-            src.connect(window.__storyAudioCtx.destination);
-            src.start(0);
+      // Fullscreen Icon & Toggling
+      function updateFullscreenIcon() {
+        var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        var iconEnter = document.getElementById('starla-fs-icon-enter');
+        var iconExit = document.getElementById('starla-fs-icon-exit');
+        if (iconEnter && iconExit) {
+          if (isFs) {
+            iconEnter.style.display = 'none';
+            iconExit.style.display = 'block';
+          } else {
+            iconEnter.style.display = 'block';
+            iconExit.style.display = 'none';
           }
-        } catch(e) {}
+        }
+      }
 
-        if (window.DS && window.DS.audioContext) {
-          try {
-            if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
-            if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
-              window.DS.audioContext.ctx.resume();
-            }
-          } catch(e) {}
+      function toggleFullscreen() {
+        var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!isFs) {
+          var docEl = document.documentElement;
+          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+          if (rfs) {
+            var pr = rfs.call(docEl);
+            if (pr && pr.catch) pr.catch(function(){});
+          }
+          if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            try { screen.orientation.lock('landscape').catch(function(){}); } catch(e){}
+          }
+        } else {
+          var efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          if (efs) {
+            var pr2 = efs.call(document);
+            if (pr2 && pr2.catch) pr2.catch(function(){});
+          }
         }
       }
 
@@ -1167,7 +1252,7 @@
             return true;
           }
         } catch(e) {
-          console.warn('[StarlaGameEngine] Navigation notice:', e);
+          console.warn('[StarlaBudaya] Navigation notice:', e);
         }
         return false;
       }
@@ -1185,7 +1270,7 @@
               }
             }
           }
-        } catch(e) {}
+        } catch(e){}
         try {
           if (window.GetPlayer) {
             var last = window.GetPlayer().GetVar('LastSlideViewed_5jpgil4RGjK');
@@ -1194,7 +1279,7 @@
               return p[p.length - 1];
             }
           }
-        } catch(e) {}
+        } catch(e){}
         return null;
       }
 
@@ -1211,32 +1296,26 @@
           video.setAttribute('webkit-playsinline', '');
           if (!window.__starlaUserInteracted) {
             video.muted = true;
+          } else {
+            video.muted = false;
+            video.volume = 1;
           }
 
           var promise = video.play();
           if (promise && typeof promise.catch === 'function') {
             promise.catch(function() {
-              video.muted = true;
-              var p2 = video.play();
-              if (p2 && typeof p2.catch === 'function') p2.catch(function(){});
+              if (!window.__starlaUserInteracted) {
+                video.muted = true;
+                var p2 = video.play();
+                if (p2 && typeof p2.catch === 'function') p2.catch(function(){});
+              }
             });
           }
         });
-
-        if (!window.__starlaUserInteracted) {
-          var loader = document.getElementById('starla-nusantara-loader');
-          if (!loader || loader.style.display === 'none' || loader.style.opacity === '0') {
-            var pill = document.getElementById('starla-sound-pill');
-            if (pill) {
-              pill.classList.remove('hidden');
-              pill.style.display = 'flex';
-            }
-          }
-        }
         return true;
       }
 
-      // Auto-dismiss native Storyline modals and trigger start buttons
+      // Auto-dismiss native Storyline modals
       function bypassNativeModals() {
         var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
         startBtns.forEach(function(b) {
@@ -1257,10 +1336,15 @@
         }
       }
 
-      // Apply Game Blur Mode to feedback layers
+      // Apply Full Screen Sharp Feedback Layers and State Backdrop
       function processFeedbackLayers() {
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
+        var hasVisibleLayer = false;
+
         layers.forEach(function(layer) {
+          var isVisible = layer.offsetWidth > 0 || layer.offsetHeight > 0 || window.getComputedStyle(layer).display !== 'none';
+          if (isVisible) hasVisibleLayer = true;
+
           var layerHtml = layer.innerHTML || '';
           var layerModelId = layer.getAttribute('data-model-id') || '';
 
@@ -1290,18 +1374,22 @@
             layer.classList.add('starla-feedback-salah');
           }
         });
+
+        var bd = document.getElementById('starla-state-backdrop');
+        if (bd) {
+          if (hasVisibleLayer) bd.classList.add('active');
+          else bd.classList.remove('active');
+        }
       }
 
-      // Show MLBB HUD Banner (Auto-Resume Notification - 3 seconds)
-      function showHudBanner(nama, sekolah) {
-        if (!el.hudBanner) return;
-        if (el.hudNama) el.hudNama.textContent = nama || 'Murid';
-        if (el.hudSekolah) el.hudSekolah.textContent = sekolah || '';
-        el.hudBanner.classList.remove('starla-hud-hidden');
-
-        setTimeout(function() {
-          if (el.hudBanner) el.hudBanner.classList.add('starla-hud-hidden');
-        }, 3000);
+      // Safe image error handler to prevent broken image icons
+      function setupImageFallbacks() {
+        document.addEventListener('error', function(e) {
+          if (e.target && e.target.tagName === 'IMG') {
+            e.target.style.opacity = '0';
+            e.target.style.visibility = 'hidden';
+          }
+        }, true);
       }
 
       // Safe matcher helper
@@ -1320,24 +1408,24 @@
         return false;
       }
 
-      // Intercept Menu activity buttons if already completed
+      // Intercept Menu activity buttons during active run
       function setupMenuInterception() {
         function handleInterception(e) {
-          var sess = state.session || loadSession();
-          if (!sess) return;
+          var run = window.__starlaActiveRun;
+          if (!run || !run.accountKey) return;
           var target = e.target;
           if (!target) return;
 
           // Check Kuis Budaya button
-          if (matchesTarget(target, '60Y2D5T2PBN', '5s6NWFwiK9z') && sess.kuisCompleted) {
+          if (matchesTarget(target, '60Y2D5T2PBN', '5s6NWFwiK9z') && run.kuisCompleted) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            console.log('[StarlaGameEngine] Murid telah menyelesaikan Kuis Budaya -> Mengarahkan langsung ke Sertifikat Kuis.');
+            console.log('[StarlaBudaya] Murid telah menyelesaikan Kuis Budaya -> Mengarahkan langsung ke Sertifikat Kuis.');
             if (window.GetPlayer) {
               try {
                 var p = window.GetPlayer();
-                p.SetVar('TextEntry4', sess.nama);
-                p.SetVar('TextEntry5', sess.sekolah);
+                p.SetVar('TextEntry4', run.nama);
+                p.SetVar('TextEntry5', run.sekolah);
               } catch(err){}
             }
             navigateToSlide(SLIDES.KUIS_CERT);
@@ -1345,16 +1433,16 @@
           }
 
           // Check Game Anak Garuda button
-          if (matchesTarget(target, '5hjfDHsqC4N', '6Z7ek63QC1F') && sess.gameCompleted) {
+          if (matchesTarget(target, '5hjfDHsqC4N', '6Z7ek63QC1F') && run.gameCompleted) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            console.log('[StarlaGameEngine] Murid telah menyelesaikan Game Anak Garuda -> Mengarahkan langsung ke Sertifikat Game.');
+            console.log('[StarlaBudaya] Murid telah menyelesaikan Game Anak Garuda -> Mengarahkan langsung ke Sertifikat Game.');
             if (window.GetPlayer) {
               try {
                 var p = window.GetPlayer();
-                p.SetVar('TextEntry4', sess.nama);
-                p.SetVar('TextEntry5', sess.sekolah);
-                if (typeof sess.poin === 'number') p.SetVar('poin', sess.poin);
+                p.SetVar('TextEntry4', run.nama);
+                p.SetVar('TextEntry5', run.sekolah);
+                if (typeof run.poin === 'number') p.SetVar('poin', run.poin);
               } catch(err){}
             }
             navigateToSlide(SLIDES.GAME_CERT);
@@ -1370,11 +1458,13 @@
       function runCycle() {
         bypassNativeModals();
         processFeedbackLayers();
-        attemptVideoAutoplay();
+        if (window.__starlaUserInteracted) {
+          attemptVideoAutoplay();
+        }
 
         var curSlideId = getCurrentSlideId();
-        if (curSlideId && curSlideId !== state.lastKnownSlideId) {
-          state.lastKnownSlideId = curSlideId;
+        if (curSlideId && curSlideId !== lastKnownSlideId) {
+          lastKnownSlideId = curSlideId;
           window.dispatchEvent(new Event('resize'));
         }
 
@@ -1383,128 +1473,58 @@
 
         var curNama = '';
         var curSekolah = '';
-        var curLogin = false;
         var curPoin = 0;
         var curScore = 0;
 
-        try { curNama = player.GetVar('TextEntry4') || ''; } catch(e){}
-        try { curSekolah = player.GetVar('TextEntry5') || ''; } catch(e){}
-        try { curLogin = player.GetVar('cek_login') || false; } catch(e){}
+        try { curNama = (player.GetVar('TextEntry4') || '').toString().trim(); } catch(e){}
+        try { curSekolah = (player.GetVar('TextEntry5') || '').toString().trim(); } catch(e){}
         try { curPoin = player.GetVar('poin') || 0; } catch(e){}
         try { curScore = player.GetVar('6pq3GkKswiA.') || 0; } catch(e){}
 
-        // 1. Check if returning session needs to be restored (1 Akun Otomatis Lanjut Tanpa Pop-up)
-        if (state.session && !state.resumed) {
-          state.resumed = true;
-          try {
-            player.SetVar('TextEntry4', state.session.nama);
-            player.SetVar('TextEntry5', state.session.sekolah);
-            player.SetVar('cek_login', true);
-            if (typeof state.session.poin === 'number') {
-              player.SetVar('poin', state.session.poin);
-            }
-          } catch(e){}
-
-          var targetSlide = state.session.lastSlideId;
-          if (!targetSlide || targetSlide === SLIDES.INTRO || targetSlide === SLIDES.LOGIN || targetSlide === SLIDES.WELCOME) {
-            targetSlide = SLIDES.MENU_UTAMA;
-          }
-
-          console.log('[StarlaGameEngine] Auto-resume ke halaman:', targetSlide);
-          showHudBanner(state.session.nama, state.session.sekolah);
-
-          setTimeout(function() { navigateToSlide(targetSlide); }, 150);
-          setTimeout(function() { navigateToSlide(targetSlide); }, 500);
-          setTimeout(function() { navigateToSlide(targetSlide); }, 1200);
-        }
-
-        // 2. Track new login or identity change
-        if (curNama && curSekolah && (curLogin || curSlideId === SLIDES.WELCOME || curSlideId === SLIDES.MENU_MATERI || curSlideId === SLIDES.MENU_UTAMA)) {
+        // Track murid identity in temporary active run
+        if (curNama && curSekolah) {
           var accountKey = buildAccountKey(curNama, curSekolah);
-          if (!state.session || state.session.accountKey !== accountKey) {
-            console.log('[StarlaGameEngine] Murid baru terdeteksi:', curNama, curSekolah);
-            state.session = {
-              accountKey: accountKey,
-              nama: curNama,
-              sekolah: curSekolah,
-              cek_login: true,
-              poin: curPoin || 0,
-              score: curScore || 0,
-              lastSlideId: curSlideId || SLIDES.MENU_UTAMA,
-              kuisCompleted: false,
-              gameCompleted: false
-            };
-            saveSession(state.session);
-            showHudBanner(state.session.nama, state.session.sekolah);
+          if (window.__starlaActiveRun.accountKey !== accountKey) {
+            window.__starlaActiveRun.accountKey = accountKey;
+            window.__starlaActiveRun.nama = curNama;
+            window.__starlaActiveRun.sekolah = curSekolah;
+            window.__starlaActiveRun.kuisCompleted = false;
+            window.__starlaActiveRun.gameCompleted = false;
           }
         }
 
-        // 3. Track slide progression and certificate completion
-        if (state.session && curSlideId) {
-          var updated = false;
-
-          if (curSlideId !== SLIDES.INTRO && curSlideId !== SLIDES.LOGIN) {
-            if (state.session.lastSlideId !== curSlideId) {
-              state.session.lastSlideId = curSlideId;
-              updated = true;
-            }
-          }
-
+        // Track certificate completion within active run
+        if (window.__starlaActiveRun.accountKey && curSlideId) {
           if (curSlideId === SLIDES.KUIS_CERT) {
-            if (!state.session.kuisCompleted) {
-              state.session.kuisCompleted = true;
-              updated = true;
-              console.log('[StarlaGameEngine] Kuis Budaya diselesaikan oleh murid!');
+            if (!window.__starlaActiveRun.kuisCompleted) {
+              window.__starlaActiveRun.kuisCompleted = true;
+              console.log('[StarlaBudaya] Kuis Budaya diselesaikan oleh murid pada sesi aktif!');
             }
             if (curScore) {
-              state.session.score = curScore;
-              updated = true;
+              window.__starlaActiveRun.score = curScore;
             }
           }
 
           if (curSlideId === SLIDES.GAME_CERT) {
-            if (!state.session.gameCompleted) {
-              state.session.gameCompleted = true;
-              updated = true;
-              console.log('[StarlaGameEngine] Game Anak Garuda diselesaikan oleh murid!');
+            if (!window.__starlaActiveRun.gameCompleted) {
+              window.__starlaActiveRun.gameCompleted = true;
+              console.log('[StarlaBudaya] Game Anak Garuda diselesaikan oleh murid pada sesi aktif!');
             }
             if (curPoin) {
-              state.session.poin = curPoin;
-              updated = true;
+              window.__starlaActiveRun.poin = curPoin;
             }
-          }
-
-          if (updated) {
-            saveSession(state.session);
           }
         }
       }
 
       // Initialization
       function init() {
-        el.hudBanner = document.getElementById('starla-hud-banner');
-        el.hudNama = document.getElementById('starla-hud-nama');
-        el.hudSekolah = document.getElementById('starla-hud-sekolah');
-        el.soundPill = document.getElementById('starla-sound-pill');
-        el.orientationAlert = document.getElementById('smart-orientation-alert');
+        setupImageFallbacks();
+        setupMenuInterception();
 
-        state.session = loadSession();
-
-        if (el.soundPill) {
-          el.soundPill.addEventListener('click', function(e) {
-            if (typeof __starlaGlobalInteractionHandler === 'function') {
-              __starlaGlobalInteractionHandler();
-            }
-          });
-          el.soundPill.addEventListener('touchend', function(e) {
-            if (typeof __starlaGlobalInteractionHandler === 'function') {
-              __starlaGlobalInteractionHandler();
-            }
-          });
-          if (window.__starlaUserInteracted) {
-            el.soundPill.classList.add('hidden');
-            el.soundPill.style.display = 'none';
-          }
+        var fsBtn = document.getElementById('starla-fs-btn');
+        if (fsBtn) {
+          fsBtn.addEventListener('click', toggleFullscreen);
         }
 
         window.addEventListener('resize', updateOrientationAlert);
@@ -1513,8 +1533,7 @@
           try { window.screen.orientation.addEventListener('change', updateOrientationAlert); } catch(e){}
         }
         updateOrientationAlert();
-
-        setupMenuInterception();
+        updateFullscreenIcon();
 
         // Dispatch initial resize events for responsive auto-scale
         [100, 300, 600, 1200, 1800].forEach(function(delay) {
@@ -1522,16 +1541,18 @@
         });
 
         var observer = new MutationObserver(function() {
-          attemptVideoAutoplay();
           bypassNativeModals();
           processFeedbackLayers();
+          if (window.__starlaUserInteracted) {
+            attemptVideoAutoplay();
+          }
         });
         observer.observe(document.body, { childList: true, subtree: true });
 
         setInterval(runCycle, 250);
         runCycle();
 
-        console.log('[StarlaGameEngine] Mobile Legends Architecture initialized successfully.');
+        console.log('[StarlaBudaya] Architecture initialized successfully.');
       }
 
       if (document.readyState === 'loading') {
@@ -1542,10 +1563,13 @@
 
       return {
         init: init,
-        getSession: function() { return state.session; },
+        getActiveRun: function() { return window.__starlaActiveRun; },
         attemptVideoAutoplay: attemptVideoAutoplay,
         navigateToSlide: navigateToSlide,
-        getCurrentSlideId: getCurrentSlideId
+        getCurrentSlideId: getCurrentSlideId,
+        updateOrientationAlert: updateOrientationAlert,
+        updateFullscreenIcon: updateFullscreenIcon,
+        toggleFullscreen: toggleFullscreen
       };
     })();
   </script>
