@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id-ID">
 <head>
   <meta charset="utf-8">
@@ -8,6 +8,8 @@
   <meta http-equiv="x-ua-compatible" content="IE=edge"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,shrink-to-fit=no,minimal-ui"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
   <style>
     html, body { height: 100%; padding: 0; margin: 0 }
     #app { height: 100%; width: 100%; }
@@ -71,9 +73,8 @@
   </script>
   
   <script>window.THREE = { };</script>
-  
-  <!-- Custom Frameless, Responsive & Smart Overlay Styles -->
-    <!-- STARLA Budaya - Mobile Legends Game Architecture Styles -->
+
+  <!-- STARLA Budaya - Mobile Legends Game Architecture Styles -->
   <style id="starla-mlbb-game-styles">
     /* 1. Global Reset & Frameless Viewport */
     html, body {
@@ -82,63 +83,41 @@
       width: 100vw !important;
       height: 100dvh !important;
       overflow: hidden !important;
-      background-color: #000000 !important;
+      background: #070b14 !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      padding-top: env(safe-area-inset-top, 0) !important;
-      padding-right: env(safe-area-inset-right, 0) !important;
-      padding-bottom: env(safe-area-inset-bottom, 0) !important;
-      padding-left: env(safe-area-inset-left, 0) !important;
       box-sizing: border-box !important;
     }
 
-    /* 2. Responsive Container & Proportional Scaling */
+    /* 2. Responsive Auto-Scale & Full-Bleed Containers (NON-DESTRUCTIVE) */
+    #wrapper,
+    .framewrap,
+    .area-primary,
+    #slide-window,
     #preso {
-      position: absolute !important;
+      width: 100% !important;
+      height: 100% !important;
       top: 0 !important;
       left: 0 !important;
-      width: 100vw !important;
-      height: 100dvh !important;
       margin: 0 !important;
       padding: 0 !important;
-      background-color: #000000 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      overflow: hidden !important;
-    }
-
-    #slide-window,
-    #wrapper,
-    .slide-container,
-    .main-window-slide-container {
-      margin: 0 auto !important;
-      box-shadow: none !important;
       border: none !important;
+      box-shadow: none !important;
       background: transparent !important;
     }
 
-    /* 3. Non-Destructive Removal of Articulate Frame, Borders & Native Panels */
-    .area-primary,
-    .cs-area-primary,
+    /* 3. Hide ONLY Outer Storyline Frame Control Bars */
     #control-panel,
-    .top-ui-bg,
     .bottom-ui-bg,
+    .top-ui-bg,
     .cs-seekcontrol,
+    .controls-group,
+    #outline-link,
+    #resources-link,
     .cs-bottom-bar,
     .cs-top-bar,
     .panel-top,
-    .panel-bottom,
-    .cs-framewrap {
-      border: none !important;
-      box-shadow: none !important;
-      background: transparent !important;
-    }
-
-    #control-panel,
-    .top-ui-bg,
-    .bottom-ui-bg,
-    .cs-seekcontrol {
+    .panel-bottom {
       display: none !important;
     }
 
@@ -148,19 +127,30 @@
       border: none !important;
     }
 
-    /* 4. Complete Suppression of Native Articulate Confirmation / Resume / Start Overlays */
-    .start-overlay,
-    #mobile-start-button,
+    /* 4. Complete Non-Destructive Suppression of Native Articulate Modals */
+    #mobile-start-container,
+    .mobile-start-overlay {
+      background: transparent !important;
+    }
+
     .mobile-start-course-title,
     .mobile-start-overlay-thumbnail,
     .mobile-start-resume-text,
+    .mobile-load-title-overlay {
+      display: none !important;
+    }
+
+    #mobile-start-button {
+      opacity: 0.001 !important;
+      background: transparent !important;
+      border: none !important;
+      cursor: pointer !important;
+    }
+
     .resume-prompt,
     .resume-prompt-slide,
     .message-window.resume-prompt-slide,
-    [data-model-id*="ResumePromptSlide"],
-    [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn0"],
-    [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"],
-    .mobile-load-title-overlay {
+    [data-model-id*="ResumePromptSlide"] {
       display: none !important;
       opacity: 0 !important;
       pointer-events: none !important;
@@ -191,6 +181,7 @@
       -webkit-user-select: none;
       max-width: 90vw;
       box-sizing: border-box;
+      pointer-events: auto;
     }
 
     .starla-hud-banner.starla-hud-hidden {
@@ -205,7 +196,7 @@
       gap: 5px;
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       color: #0b132b;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.8px;
       text-transform: uppercase;
@@ -255,7 +246,7 @@
       transform: scale(1.04);
     }
 
-    /* Discreet Mini Switch Account Button (Persistent in Corner) */
+    /* Discreet Mini Switch Account Button (Persistent in Top Right Corner) */
     .starla-mini-switch-btn {
       position: fixed;
       top: 10px;
@@ -264,18 +255,18 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(245, 158, 11, 0.4);
       color: #cbd5e1;
       font-size: 11px;
       font-weight: 600;
-      padding: 5px 11px;
+      padding: 6px 12px;
       border-radius: 999px;
       cursor: pointer;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       transition: all 0.2s ease;
-      opacity: 0.85;
+      opacity: 0.9;
       outline: none;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
@@ -283,7 +274,7 @@
     .starla-mini-switch-btn:hover {
       opacity: 1;
       background: rgba(15, 23, 42, 0.95);
-      border-color: rgba(245, 158, 11, 0.6);
+      border-color: rgba(245, 158, 11, 0.8);
       color: #fbbf24;
       transform: translateY(1px);
     }
@@ -335,12 +326,6 @@
       50% {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 28px rgba(251, 191, 36, 0.6);
       }
-    }
-
-    .starla-sound-icon {
-      font-size: 16px;
-      display: flex;
-      align-items: center;
     }
 
     /* 7. Smart Orientation Notification (Mobile Portrait) */
@@ -424,22 +409,32 @@
 
     /* 8. Game Blur Mode for Feedback Layers (Benar & Salah) */
     .slide-layer:not(.base-layer) {
-      backdrop-filter: blur(14px) saturate(135%) !important;
-      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
       border-radius: 16px !important;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
 
     .slide-layer:not(.base-layer).starla-feedback-benar {
-      background: radial-gradient(circle at 50% 50%, rgba(6, 44, 24, 0.72) 0%, rgba(2, 20, 11, 0.92) 100%) !important;
-      border: 2px solid rgba(46, 204, 113, 0.8) !important;
-      box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 20px rgba(241, 196, 15, 0.4) !important;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(6, 44, 24, 0.78) 0%, rgba(2, 20, 11, 0.94) 100%),
+        url('mobile/Slide6OyJsyjTUqI.jpg') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      backdrop-filter: blur(14px) saturate(140%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+      border: 2px solid rgba(46, 204, 113, 0.85) !important;
+      box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 25px rgba(245, 158, 11, 0.45) !important;
     }
 
     .slide-layer:not(.base-layer).starla-feedback-salah {
-      background: radial-gradient(circle at 50% 50%, rgba(55, 12, 12, 0.75) 0%, rgba(25, 4, 4, 0.94) 100%) !important;
-      border: 2px solid rgba(231, 76, 60, 0.8) !important;
-      box-shadow: 0 0 35px rgba(231, 76, 60, 0.6), inset 0 0 20px rgba(230, 126, 34, 0.4) !important;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(55, 12, 12, 0.8) 0%, rgba(25, 4, 4, 0.95) 100%),
+        url('mobile/Slide6OyJsyjTUqI.jpg') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      backdrop-filter: blur(14px) saturate(140%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+      border: 2px solid rgba(231, 76, 60, 0.85) !important;
+      box-shadow: 0 0 35px rgba(231, 76, 60, 0.6), inset 0 0 25px rgba(230, 126, 34, 0.45) !important;
     }
 
     /* Text and buttons within feedback layers stay crisp and high contrast */
@@ -451,8 +446,8 @@
     }
   </style>
 </head>
-<body style="background: #000000" class="cs-HTML theme-classic">
-    <!-- Smart Orientation Alert for Mobile Portrait -->
+<body style="background: #070b14" class="cs-HTML theme-classic">
+  <!-- Smart Orientation Alert for Mobile Portrait -->
   <div id="smart-orientation-alert" class="smart-orientation-alert" aria-live="polite">
     <div class="smart-orientation-card">
       <div class="smart-phone-icon">
@@ -470,9 +465,9 @@
 
   <!-- Mobile Legends Floating Game HUD Banner -->
   <div id="starla-hud-banner" class="starla-hud-banner starla-hud-hidden" aria-live="polite">
-    <div class="starla-hud-badge">SESI AKTIF</div>
+    <div class="starla-hud-badge">🎮 Melanjutkan Sesi:</div>
     <div class="starla-hud-text">
-      Selamat datang kembali, <strong id="starla-hud-nama" class="starla-hud-name">Murid</strong> • <span id="starla-hud-sekolah" class="starla-hud-school">Sekolah</span>
+      <strong id="starla-hud-nama" class="starla-hud-name">Murid</strong> • <span id="starla-hud-sekolah" class="starla-hud-school">Sekolah</span>
     </div>
     <button id="starla-btn-switch-account" class="starla-hud-switch-btn" type="button" aria-label="Ganti Akun Murid">
       Ganti Akun
@@ -487,8 +482,7 @@
   <!-- Non-Blocking Sound Pill for Autoplay Cascade -->
   <div id="starla-sound-pill" class="starla-sound-pill" aria-live="polite">
     <div class="starla-sound-card">
-      <span class="starla-sound-icon">🔊</span>
-      <span class="starla-sound-text">Ketuk layar untuk mengaktifkan suara murid</span>
+      <span class="starla-sound-text">🔊 Aktifkan Suara &amp; Layar Penuh</span>
     </div>
   </div>
 
@@ -501,7 +495,7 @@
     window.StarlaGameEngine = (function() {
       'use strict';
 
-      var STORAGE_KEY = 'starla_mlbb_session_v1';
+      var STORAGE_KEY = 'starla_mlbb_session_v2';
       var SLIDE_SCENE_PREFIX = '_player.5sAEMI5psmg.';
 
       // Slide mapping
@@ -533,7 +527,8 @@
       var state = {
         session: null,
         userInteracted: false,
-        resumed: false
+        resumed: false,
+        lastKnownSlideId: null
       };
 
       // DOM Elements
@@ -560,9 +555,16 @@
       function loadSession() {
         try {
           var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            // fallback check for migration
+            raw = localStorage.getItem('starla_mlbb_session_v1');
+          }
           if (raw) {
             var parsed = JSON.parse(raw);
             if (parsed && parsed.nama && parsed.sekolah) {
+              if (!parsed.accountKey) {
+                parsed.accountKey = buildAccountKey(parsed.nama, parsed.sekolah);
+              }
               return parsed;
             }
           }
@@ -584,6 +586,7 @@
       function clearSession() {
         try {
           localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem('starla_mlbb_session_v1');
           // Also clear Articulate native resume storage keys to prevent native popups
           var keysToClear = [];
           for (var i = 0; i < localStorage.length; i++) {
@@ -715,18 +718,24 @@
           if (video.__starlaAutoplayHandled) return;
           video.__starlaAutoplayHandled = true;
 
+          video.setAttribute('playsinline', '');
+          video.setAttribute('webkit-playsinline', '');
+
           // Attempt full-sound autoplay first
           video.muted = false;
           var promise = video.play();
           if (promise && typeof promise.catch === 'function') {
-            promise.catch(function() {
+            promise.catch(function(err) {
+              console.log('[StarlaGameEngine] Sound autoplay blocked, falling back to muted autoplay:', err);
               // Muted autoplay fallback
               video.muted = true;
-              video.play().then(function() {
-                if (!state.userInteracted && el.soundPill) {
-                  el.soundPill.classList.add('visible');
-                }
-              }).catch(function(){});
+              var p2 = video.play();
+              if (p2 && typeof p2.catch === 'function') {
+                p2.catch(function(){});
+              }
+              if (!state.userInteracted && el.soundPill) {
+                el.soundPill.classList.add('visible');
+              }
             });
           }
         });
@@ -751,6 +760,10 @@
 
         unlockAudioContext();
         enterFullscreenAndLandscape();
+        bypassNativeModals();
+
+        // Dispatch resize to ensure accurate frame scaling
+        window.dispatchEvent(new Event('resize'));
 
         // Remove one-time listeners
         ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(function(evt) {
@@ -758,12 +771,16 @@
         });
       }
 
-      // Auto-dismiss native Storyline modals if they mount
+      // Auto-dismiss native Storyline modals and trigger start buttons
       function bypassNativeModals() {
-        var startBtns = document.querySelectorAll('.start-overlay, #mobile-start-button, .mobile-start-resume-text button');
+        var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
         startBtns.forEach(function(b) {
           try { b.click(); } catch(e){}
         });
+
+        if (window.DS && window.DS.renderEngine && typeof window.DS.renderEngine.killPlayerPropertiesImagePreview === 'function') {
+          try { window.DS.renderEngine.killPlayerPropertiesImagePreview(); } catch(e){}
+        }
 
         var resumePromptBtns = document.querySelectorAll('[data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"], [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn0"]');
         if (resumePromptBtns.length > 0) {
@@ -787,7 +804,7 @@
           FEEDBACK_LAYERS.BENAR.forEach(function(id) {
             if (layerModelId === id || layerHtml.indexOf(id) !== -1) isBenar = true;
           });
-          if (!isBenar && (layerHtml.indexOf('Slide6Yl1XmK7vDs') !== -1 || layerHtml.indexOf('Benar') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_CorrectReview') !== -1)) {
+          if (!isBenar && (layerHtml.indexOf('Slide6Yl1XmK7vDs') !== -1 || layerHtml.indexOf('64trbzmlqII') !== -1 || layerHtml.indexOf('6cVvYbugY8D') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_CorrectReview') !== -1)) {
             isBenar = true;
           }
 
@@ -796,7 +813,7 @@
           FEEDBACK_LAYERS.SALAH.forEach(function(id) {
             if (layerModelId === id || layerHtml.indexOf(id) !== -1) isSalah = true;
           });
-          if (!isSalah && (layerHtml.indexOf('Slide6CCYce11Vkv') !== -1 || layerHtml.indexOf('Salah') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_IncorrectReview') !== -1)) {
+          if (!isSalah && (layerHtml.indexOf('Slide6CCYce11Vkv') !== -1 || layerHtml.indexOf('6F5Z4MpnsdU') !== -1 || layerHtml.indexOf('5gkgaNEdBEt') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_IncorrectReview') !== -1)) {
             isSalah = true;
           }
 
@@ -902,6 +919,12 @@
         processFeedbackLayers();
         attemptVideoAutoplay();
 
+        var curSlideId = getCurrentSlideId();
+        if (curSlideId && curSlideId !== state.lastKnownSlideId) {
+          state.lastKnownSlideId = curSlideId;
+          window.dispatchEvent(new Event('resize'));
+        }
+
         if (!window.GetPlayer) return;
         var player = window.GetPlayer();
 
@@ -916,8 +939,6 @@
         try { curLogin = player.GetVar('cek_login') || false; } catch(e){}
         try { curPoin = player.GetVar('poin') || 0; } catch(e){}
         try { curScore = player.GetVar('6pq3GkKswiA.$Score') || 0; } catch(e){}
-
-        var curSlideId = getCurrentSlideId();
 
         // 1. Check if returning session needs to be restored
         if (state.session && !state.resumed) {
@@ -1045,6 +1066,12 @@
         updateOrientationAlert();
 
         setupMenuInterception();
+
+        // Dispatch initial resize events for responsive auto-scale
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 300);
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 600);
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 1200);
 
         var observer = new MutationObserver(function() {
           attemptVideoAutoplay();
