@@ -72,8 +72,548 @@
   
   <script>window.THREE = { };</script>
   
+  <!-- Custom Frameless, Responsive & Smart Overlay Styles -->
+  <style id="starla-edtech-styles">
+    /* 1. Global Reset & Frameless Viewport */
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      overflow: hidden !important;
+      background-color: #000000 !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 2. Container Auto-Scale & Proportional Centering */
+    #preso {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #000000 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+    }
+
+    #slide-window,
+    #wrapper,
+    .slide-container,
+    .main-window-slide-container {
+      margin: 0 auto !important;
+      box-shadow: none !important;
+      border: none !important;
+      background: transparent !important;
+    }
+
+    /* 3. Non-Destructive Removal of Articulate Frame, Borders & Control Panels */
+    .area-primary,
+    .cs-area-primary,
+    #control-panel,
+    .top-ui-bg,
+    .bottom-ui-bg,
+    .cs-seekcontrol,
+    .cs-bottom-bar,
+    .cs-top-bar,
+    .panel-top,
+    .panel-bottom,
+    .cs-framewrap {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+
+    #control-panel,
+    .top-ui-bg,
+    .bottom-ui-bg,
+    .cs-seekcontrol {
+      display: none !important;
+    }
+
+    .cs-base {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    /* 4. Smart Launcher Overlay */
+    .smart-launcher-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      background: radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.94) 0%, rgba(3, 7, 18, 0.98) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #ffffff;
+      user-select: none;
+      -webkit-user-select: none;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .smart-launcher-overlay.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .smart-launcher-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 24px;
+      padding: 38px 42px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      animation: launcherSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes launcherSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .smart-launcher-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .smart-launcher-title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 0 0 10px 0;
+      background: linear-gradient(135deg, #ffffff 40%, #fbbf24 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .smart-launcher-subtitle {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      margin: 0 0 32px 0;
+    }
+
+    .smart-start-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
+      transition: all 0.25s ease;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .smart-start-btn:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px rgba(37, 99, 235, 0.6);
+    }
+
+    .smart-start-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .smart-btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+    }
+
+    .smart-btn-icon svg {
+      width: 16px;
+      height: 16px;
+      margin-left: 2px;
+    }
+
+    .smart-launcher-hint {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 18px;
+    }
+
+    /* 5. Smart Orientation Notification (Mobile Portrait) */
+    .smart-orientation-alert {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      z-index: 100000;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      width: calc(100% - 32px);
+      max-width: 420px;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .smart-orientation-alert.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .smart-orientation-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #ffffff;
+    }
+
+    .smart-phone-icon {
+      position: relative;
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fbbf24;
+    }
+
+    .smart-phone-icon svg {
+      width: 26px;
+      height: 26px;
+      animation: phoneRotateAnim 2.4s ease-in-out infinite;
+    }
+
+    @keyframes phoneRotateAnim {
+      0%, 15% {
+        transform: rotate(0deg);
+      }
+      45%, 70% {
+        transform: rotate(90deg);
+      }
+      90%, 100% {
+        transform: rotate(0deg);
+      }
+    }
+
+    .smart-orientation-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .smart-orientation-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 3px;
+    }
+
+    .smart-orientation-desc {
+      font-size: 11px;
+      color: #e2e8f0;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 480px) {
+      .smart-launcher-card {
+        padding: 30px 22px;
+      }
+      .smart-launcher-title {
+        font-size: 24px;
+      }
+      .smart-launcher-subtitle {
+        font-size: 13px;
+        margin-bottom: 24px;
+      }
+      .smart-start-btn {
+        padding: 14px 22px;
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
-<body style="background: #FFFFFF" class="cs-HTML theme-classic">
+<body style="background: #000000" class="cs-HTML theme-classic">
+  <!-- Smart Orientation Alert for Mobile Portrait -->
+  <div id="smart-orientation-alert" class="smart-orientation-alert" aria-live="polite">
+    <div class="smart-orientation-card">
+      <div class="smart-phone-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+      </div>
+      <div class="smart-orientation-text">
+        <div class="smart-orientation-title">Mode Layar Mendatar</div>
+        <div class="smart-orientation-desc">Silakan miringkan ponsel ke posisi mendatar (landscape) untuk kenyamanan belajar kamu.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Overlay Launcher -->
+  <div id="smart-launcher-overlay" class="smart-launcher-overlay">
+    <div class="smart-launcher-card">
+      <div class="smart-launcher-badge">
+        <span>★</span>
+        <span>Media Pembelajaran Interaktif</span>
+      </div>
+      <h1 class="smart-launcher-title">STARLA BUDAYA</h1>
+      <p class="smart-launcher-subtitle">Jelajahi keragaman dan kekayaan budaya Nusantara bersama Starla</p>
+      <button id="smart-start-btn" class="smart-start-btn" type="button" aria-label="Mulai Belajar">
+        <span class="smart-btn-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </span>
+        <span class="smart-btn-text">Mulai Belajar</span>
+      </button>
+      <div class="smart-launcher-hint">Ketuk tombol di atas untuk tampilan layar penuh & audio otomatis</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var launcherOverlay = document.getElementById('smart-launcher-overlay');
+      var startBtn = document.getElementById('smart-start-btn');
+      var orientationAlert = document.getElementById('smart-orientation-alert');
+
+      // Helper to detect mobile device
+      function isMobileDevice() {
+        return (
+          (window.isMobile && window.isMobile.any) ||
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+        );
+      }
+
+      // Check orientation and toggle alert
+      function updateOrientationAlert() {
+        if (!orientationAlert) return;
+        var isPortrait = window.innerHeight > window.innerWidth;
+        if (isMobileDevice() && isPortrait) {
+          orientationAlert.classList.add('visible');
+        } else {
+          orientationAlert.classList.remove('visible');
+        }
+      }
+
+      window.addEventListener('resize', updateOrientationAlert);
+      window.addEventListener('orientationchange', updateOrientationAlert);
+      if (window.screen && window.screen.orientation) {
+        try {
+          window.screen.orientation.addEventListener('change', updateOrientationAlert);
+        } catch(e) {}
+      }
+      updateOrientationAlert();
+
+      // AudioContext Unlocker
+      function unlockAudioContext() {
+        try {
+          var AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtxClass) {
+            if (!window.__storyAudioCtx) {
+              window.__storyAudioCtx = new AudioCtxClass();
+            }
+            if (window.__storyAudioCtx.state === 'suspended') {
+              window.__storyAudioCtx.resume();
+            }
+            var buf = window.__storyAudioCtx.createBuffer(1, 1, 22050);
+            var src = window.__storyAudioCtx.createBufferSource();
+            src.buffer = buf;
+            src.connect(window.__storyAudioCtx.destination);
+            src.start(0);
+          }
+        } catch (e) {
+          console.warn("AudioContext unlock notice:", e);
+        }
+
+        if (window.DS && window.DS.audioContext) {
+          try {
+            if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
+            if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') window.DS.audioContext.ctx.resume();
+          } catch (e) {}
+        }
+      }
+
+      // Force play video & audio elements in DOM
+      function playMediaElements() {
+        var mediaElements = document.querySelectorAll('video, audio');
+        mediaElements.forEach(function(media) {
+          try {
+            media.muted = false;
+            var playPromise = media.play();
+            if (playPromise && playPromise.catch) {
+              playPromise.catch(function() {
+                media.muted = true;
+                media.play().then(function() {
+                  media.muted = false;
+                }).catch(function() {});
+              });
+            }
+          } catch(err) {}
+        });
+      }
+
+      // Trigger native Storyline start buttons
+      function triggerStorylineStart() {
+        var selectors = [
+          '.start-overlay',
+          '#mobile-start-button',
+          '.mobile-start-course-title',
+          '.play-button',
+          '.cs-play-button',
+          '.play-symbol',
+          'button.play',
+          '.cover-play-button',
+          '#preso .start-overlay',
+          '#preso button[aria-label="Play"]',
+          '#preso button[data-action="play"]'
+        ];
+        selectors.forEach(function(sel) {
+          try {
+            var els = document.querySelectorAll(sel);
+            els.forEach(function(btn) {
+              try {
+                btn.click();
+              } catch(e) {}
+            });
+          } catch(e) {}
+        });
+      }
+
+      // Handle start button interaction
+      if (startBtn && launcherOverlay) {
+        var started = false;
+        function handleStart(e) {
+          if (started) return;
+          started = true;
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+
+          // a. Request fullscreen (especially on mobile/touch)
+          try {
+            var docEl = document.documentElement;
+            var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+            if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
+              var fsPromise = rfs.call(docEl);
+              if (fsPromise && fsPromise.catch) fsPromise.catch(function() {});
+            }
+          } catch (err) {
+            console.warn("Fullscreen request notice:", err);
+          }
+
+          // b. Lock screen orientation to landscape
+          try {
+            if (screen.orientation && typeof screen.orientation.lock === 'function') {
+              screen.orientation.lock('landscape').catch(function(err) {
+                console.log("Orientation lock notice:", err);
+              });
+            }
+          } catch (err) {
+            console.warn("Orientation lock notice:", err);
+          }
+
+          // c. Unlock AudioContext & force play media
+          unlockAudioContext();
+          playMediaElements();
+          triggerStorylineStart();
+
+          // MutationObserver to catch media elements created during slide setup
+          var presoEl = document.getElementById('preso') || document.body;
+          var observer = new MutationObserver(function() {
+            playMediaElements();
+            triggerStorylineStart();
+          });
+          observer.observe(presoEl, { childList: true, subtree: true });
+          setTimeout(function() {
+            observer.disconnect();
+          }, 4000);
+
+          // Staggered retries for audio/video playback and start triggers
+          [50, 150, 300, 600, 1000, 1800, 2500].forEach(function(delay) {
+            setTimeout(function() {
+              playMediaElements();
+              triggerStorylineStart();
+            }, delay);
+          });
+
+          // Dispatch resize events so Storyline's scaler recalculates view
+          setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+          }, 100);
+          setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+          }, 500);
+
+          // d. Smoothly hide launcher overlay
+          launcherOverlay.classList.add('fade-out');
+          setTimeout(function() {
+            launcherOverlay.style.display = 'none';
+            updateOrientationAlert();
+          }, 450);
+        }
+
+        startBtn.addEventListener('click', handleStart);
+        startBtn.addEventListener('touchend', handleStart);
+      }
+    })();
+  </script>
   <!-- 360 -->
   <script>!function(){var e,i=/iPhone/i,o=/iPod/i,n=/iPad/i,t=/\biOS-universal(?:.+)Mac\b/i,r=/\bAndroid(?:.+)Mobile\b/i,a=/Android/i,d=/(?:SD4930UR|\bSilk(?:.+)Mobile\b)/i,p=/Silk/i,l=/Windows Phone/i,u=/\bWindows(?:.+)ARM\b/i,b=/BlackBerry/i,s=/BB10/i,c=/Opera Mini/i,f=/\b(CriOS|Chrome)(?:.+)Mobile/i,h=/Mobile(?:.+)Firefox\b/i,v=function(e){return void 0!==e&&"MacIntel"===e.platform&&"number"==typeof e.maxTouchPoints&&e.maxTouchPoints>1&&"undefined"==typeof MSStream};e=function(e){var m={userAgent:"",platform:"",maxTouchPoints:0};e||"undefined"==typeof navigator?"string"==typeof e?m.userAgent=e:e&&e.userAgent&&(m={userAgent:e.userAgent,platform:e.platform,maxTouchPoints:e.maxTouchPoints||0}):m={userAgent:navigator.userAgent,platform:navigator.platform,maxTouchPoints:navigator.maxTouchPoints||0};var g=m.userAgent,y=g.split("[FBAN");void 0!==y[1]&&(g=y[0]),void 0!==(y=g.split("Twitter"))[1]&&(g=y[0]);var A=function(e){return function(i){return i.test(e)}}(g),w={apple:{phone:A(i)&&!A(l),ipod:A(o),tablet:!A(i)&&(A(n)||v(m))&&!A(l),universal:A(t),device:(A(i)||A(o)||A(n)||A(t)||v(m))&&!A(l)},amazon:{phone:A(d),tablet:!A(d)&&A(p),device:A(d)||A(p)},android:{phone:!A(l)&&A(d)||!A(l)&&A(r),tablet:!A(l)&&!A(d)&&!A(r)&&(A(p)||A(a)),device:!A(l)&&(A(d)||A(p)||A(r)||A(a))||A(/\bokhttp\b/i)},windows:{phone:A(l),tablet:A(u),device:A(l)||A(u)},other:{blackberry:A(b),blackberry10:A(s),opera:A(c),firefox:A(h),chrome:A(f),device:A(b)||A(s)||A(c)||A(h)||A(f)},any:!1,phone:!1,tablet:!1};return w.any=w.apple.device||w.android.device||w.windows.device||w.other.device,w.phone=w.apple.phone||w.android.phone||w.windows.phone,w.tablet=w.apple.tablet||w.android.tablet||w.windows.tablet,w}(),"object"==typeof exports&&"undefined"!=typeof module?module.exports=e:"function"==typeof define&&define.amd?define((function(){return e})):this.isMobile=e}();
     window.isMobile.apple.tablet = window.isMobile.apple.tablet ||
