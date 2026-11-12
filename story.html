@@ -45,6 +45,13 @@
         lastTouchEnd = now;
       }, { passive: false });
 
+      // Prevent dblclick zoom
+      document.addEventListener('dblclick', function(e) {
+        if (!e.target || (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
       // Prevent Ctrl/Cmd + Wheel zoom
       window.addEventListener('wheel', function(e) {
         if (e.ctrlKey || e.metaKey) {
@@ -860,7 +867,7 @@
   </div>
 
   <!-- Floating Sound Pill (Smart Autoplay Cascade) -->
-  <div id="starla-sound-pill" class="starla-sound-pill" role="button" tabindex="0" aria-label="Ketuk Layar untuk Suara">
+  <div id="starla-sound-pill" class="starla-sound-pill hidden" style="display: none;" role="button" tabindex="0" aria-label="Ketuk Layar untuk Suara">
     <div class="starla-sound-card">
       <span class="starla-sound-text">🔊 Ketuk Layar untuk Suara</span>
     </div>
@@ -959,6 +966,15 @@
               if (p && p.catch) p.catch(function(){});
             } catch(e){}
           });
+        }
+
+        // Show floating sound pill if audio is muted
+        if (!window.__starlaUserInteracted) {
+          var pill = document.getElementById('starla-sound-pill');
+          if (pill) {
+            pill.classList.remove('hidden');
+            pill.style.display = 'flex';
+          }
         }
 
         window.dispatchEvent(new Event('resize'));
@@ -1206,6 +1222,17 @@
             });
           }
         });
+
+        if (!window.__starlaUserInteracted) {
+          var loader = document.getElementById('starla-nusantara-loader');
+          if (!loader || loader.style.display === 'none' || loader.style.opacity === '0') {
+            var pill = document.getElementById('starla-sound-pill');
+            if (pill) {
+              pill.classList.remove('hidden');
+              pill.style.display = 'flex';
+            }
+          }
+        }
         return true;
       }
 
