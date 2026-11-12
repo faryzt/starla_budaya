@@ -73,7 +73,8 @@
   <script>window.THREE = { };</script>
   
   <!-- Custom Frameless, Responsive & Smart Overlay Styles -->
-  <style id="starla-edtech-styles">
+    <!-- STARLA Budaya - Mobile Legends Game Architecture Styles -->
+  <style id="starla-mlbb-game-styles">
     /* 1. Global Reset & Frameless Viewport */
     html, body {
       margin: 0 !important;
@@ -84,9 +85,14 @@
       background-color: #000000 !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      padding-top: env(safe-area-inset-top, 0) !important;
+      padding-right: env(safe-area-inset-right, 0) !important;
+      padding-bottom: env(safe-area-inset-bottom, 0) !important;
+      padding-left: env(safe-area-inset-left, 0) !important;
+      box-sizing: border-box !important;
     }
 
-    /* 2. Container Auto-Scale & Proportional Centering */
+    /* 2. Responsive Container & Proportional Scaling */
     #preso {
       position: absolute !important;
       top: 0 !important;
@@ -112,7 +118,7 @@
       background: transparent !important;
     }
 
-    /* 3. Non-Destructive Removal of Articulate Frame, Borders & Control Panels */
+    /* 3. Non-Destructive Removal of Articulate Frame, Borders & Native Panels */
     .area-primary,
     .cs-area-primary,
     #control-panel,
@@ -142,149 +148,202 @@
       border: none !important;
     }
 
-    /* 4. Smart Launcher Overlay */
-    .smart-launcher-overlay {
+    /* 4. Complete Suppression of Native Articulate Confirmation / Resume / Start Overlays */
+    .start-overlay,
+    #mobile-start-button,
+    .mobile-start-course-title,
+    .mobile-start-overlay-thumbnail,
+    .mobile-start-resume-text,
+    .resume-prompt,
+    .resume-prompt-slide,
+    .message-window.resume-prompt-slide,
+    [data-model-id*="ResumePromptSlide"],
+    [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn0"],
+    [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"],
+    .mobile-load-title-overlay {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+
+    /* 5. Mobile Legends Floating Game HUD Banner */
+    .starla-hud-banner {
       position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100dvh;
-      background: radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.94) 0%, rgba(3, 7, 18, 0.98) 100%);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      z-index: 99995;
       display: flex;
       align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      opacity: 1;
-      visibility: visible;
-      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      gap: 12px;
+      background: rgba(11, 19, 43, 0.94);
+      border: 1px solid rgba(245, 158, 11, 0.65);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75), 0 0 22px rgba(245, 158, 11, 0.3);
+      border-radius: 999px;
+      padding: 8px 18px 8px 14px;
       color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
       user-select: none;
       -webkit-user-select: none;
-      padding: 20px;
+      max-width: 90vw;
       box-sizing: border-box;
     }
 
-    .smart-launcher-overlay.fade-out {
+    .starla-hud-banner.starla-hud-hidden {
+      transform: translateX(-50%) translateY(-120px);
       opacity: 0;
-      visibility: hidden;
       pointer-events: none;
     }
 
-    .smart-launcher-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 24px;
-      padding: 38px 42px;
-      max-width: 460px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      animation: launcherSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    .starla-hud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #0b132b;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+      flex-shrink: 0;
     }
 
-    @keyframes launcherSlideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.96);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    .starla-hud-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .smart-launcher-badge {
+    .starla-hud-name {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .starla-hud-school {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .starla-hud-switch-btn {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    .starla-hud-switch-btn:hover {
+      background: rgba(239, 68, 68, 0.4);
+      color: #ffffff;
+      border-color: #ef4444;
+      transform: scale(1.04);
+    }
+
+    /* Discreet Mini Switch Account Button (Persistent in Corner) */
+    .starla-mini-switch-btn {
+      position: fixed;
+      top: 10px;
+      right: 14px;
+      z-index: 99990;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: #f59e0b;
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      padding: 5px 14px;
-      border-radius: 999px;
-      margin-bottom: 18px;
-    }
-
-    .smart-launcher-title {
-      font-size: 30px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      margin: 0 0 10px 0;
-      background: linear-gradient(135deg, #ffffff 40%, #fbbf24 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1.2;
-    }
-
-    .smart-launcher-subtitle {
-      font-size: 14px;
-      line-height: 1.55;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       color: #cbd5e1;
-      margin: 0 0 32px 0;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      opacity: 0.85;
+      outline: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    .smart-start-btn {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      padding: 16px 28px;
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 999px;
-      color: #ffffff;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+    .starla-mini-switch-btn:hover {
+      opacity: 1;
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(245, 158, 11, 0.6);
+      color: #fbbf24;
+      transform: translateY(1px);
+    }
+
+    /* 6. Sound Pill (Smart Autoplay Cascade) */
+    .starla-sound-pill {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 99996;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(14px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
-      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
-      transition: all 0.25s ease;
-      outline: none;
+      user-select: none;
+      -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .smart-start-btn:hover {
-      background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 14px 34px rgba(37, 99, 235, 0.6);
-    }
-
-    .smart-start-btn:active {
+    .starla-sound-pill.visible {
+      opacity: 1;
+      visibility: visible;
       transform: translateY(0);
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
     }
 
-    .smart-btn-icon {
+    .starla-sound-card {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(251, 191, 36, 0.6);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 18px rgba(251, 191, 36, 0.3);
+      border-radius: 999px;
+      padding: 10px 18px;
+      color: #fbbf24;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: soundPillPulse 2s infinite ease-in-out;
     }
 
-    .smart-btn-icon svg {
-      width: 16px;
-      height: 16px;
-      margin-left: 2px;
+    @keyframes soundPillPulse {
+      0%, 100% {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px rgba(251, 191, 36, 0.3);
+      }
+      50% {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 28px rgba(251, 191, 36, 0.6);
+      }
     }
 
-    .smart-launcher-hint {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 18px;
+    .starla-sound-icon {
+      font-size: 16px;
+      display: flex;
+      align-items: center;
     }
 
-    /* 5. Smart Orientation Notification (Mobile Portrait) */
+    /* 7. Smart Orientation Notification (Mobile Portrait) */
     .smart-orientation-alert {
       position: fixed;
       top: 16px;
@@ -313,10 +372,10 @@
       align-items: center;
       gap: 14px;
       background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      border: 1px solid rgba(245, 158, 11, 0.5);
       border-radius: 16px;
       padding: 14px 18px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       color: #ffffff;
@@ -340,15 +399,9 @@
     }
 
     @keyframes phoneRotateAnim {
-      0%, 15% {
-        transform: rotate(0deg);
-      }
-      45%, 70% {
-        transform: rotate(90deg);
-      }
-      90%, 100% {
-        transform: rotate(0deg);
-      }
+      0%, 15% { transform: rotate(0deg); }
+      45%, 70% { transform: rotate(90deg); }
+      90%, 100% { transform: rotate(0deg); }
     }
 
     .smart-orientation-text {
@@ -369,26 +422,37 @@
       line-height: 1.4;
     }
 
-    @media (max-width: 480px) {
-      .smart-launcher-card {
-        padding: 30px 22px;
-      }
-      .smart-launcher-title {
-        font-size: 24px;
-      }
-      .smart-launcher-subtitle {
-        font-size: 13px;
-        margin-bottom: 24px;
-      }
-      .smart-start-btn {
-        padding: 14px 22px;
-        font-size: 16px;
-      }
+    /* 8. Game Blur Mode for Feedback Layers (Benar & Salah) */
+    .slide-layer:not(.base-layer) {
+      backdrop-filter: blur(14px) saturate(135%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
+      border-radius: 16px !important;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .slide-layer:not(.base-layer).starla-feedback-benar {
+      background: radial-gradient(circle at 50% 50%, rgba(6, 44, 24, 0.72) 0%, rgba(2, 20, 11, 0.92) 100%) !important;
+      border: 2px solid rgba(46, 204, 113, 0.8) !important;
+      box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 20px rgba(241, 196, 15, 0.4) !important;
+    }
+
+    .slide-layer:not(.base-layer).starla-feedback-salah {
+      background: radial-gradient(circle at 50% 50%, rgba(55, 12, 12, 0.75) 0%, rgba(25, 4, 4, 0.94) 100%) !important;
+      border: 2px solid rgba(231, 76, 60, 0.8) !important;
+      box-shadow: 0 0 35px rgba(231, 76, 60, 0.6), inset 0 0 20px rgba(230, 126, 34, 0.4) !important;
+    }
+
+    /* Text and buttons within feedback layers stay crisp and high contrast */
+    .slide-layer:not(.base-layer) .vectorshape,
+    .slide-layer:not(.base-layer) text,
+    .slide-layer:not(.base-layer) button {
+      filter: none !important;
+      -webkit-font-smoothing: antialiased;
     }
   </style>
 </head>
 <body style="background: #000000" class="cs-HTML theme-classic">
-  <!-- Smart Orientation Alert for Mobile Portrait -->
+    <!-- Smart Orientation Alert for Mobile Portrait -->
   <div id="smart-orientation-alert" class="smart-orientation-alert" aria-live="polite">
     <div class="smart-orientation-card">
       <div class="smart-phone-icon">
@@ -399,39 +463,140 @@
       </div>
       <div class="smart-orientation-text">
         <div class="smart-orientation-title">Mode Layar Mendatar</div>
-        <div class="smart-orientation-desc">Silakan miringkan ponsel ke posisi mendatar (landscape) untuk kenyamanan belajar kamu.</div>
+        <div class="smart-orientation-desc">Silakan miringkan ponsel ke posisi mendatar (landscape) untuk kenyamanan belajar murid.</div>
       </div>
     </div>
   </div>
 
-  <!-- Smart Overlay Launcher -->
-  <div id="smart-launcher-overlay" class="smart-launcher-overlay">
-    <div class="smart-launcher-card">
-      <div class="smart-launcher-badge">
-        <span>★</span>
-        <span>Media Pembelajaran Interaktif</span>
-      </div>
-      <h1 class="smart-launcher-title">STARLA BUDAYA</h1>
-      <p class="smart-launcher-subtitle">Jelajahi keragaman dan kekayaan budaya Nusantara bersama Starla</p>
-      <button id="smart-start-btn" class="smart-start-btn" type="button" aria-label="Mulai Belajar">
-        <span class="smart-btn-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        </span>
-        <span class="smart-btn-text">Mulai Belajar</span>
-      </button>
-      <div class="smart-launcher-hint">Ketuk tombol di atas untuk tampilan layar penuh & audio otomatis</div>
+  <!-- Mobile Legends Floating Game HUD Banner -->
+  <div id="starla-hud-banner" class="starla-hud-banner starla-hud-hidden" aria-live="polite">
+    <div class="starla-hud-badge">SESI AKTIF</div>
+    <div class="starla-hud-text">
+      Selamat datang kembali, <strong id="starla-hud-nama" class="starla-hud-name">Murid</strong> • <span id="starla-hud-sekolah" class="starla-hud-school">Sekolah</span>
+    </div>
+    <button id="starla-btn-switch-account" class="starla-hud-switch-btn" type="button" aria-label="Ganti Akun Murid">
+      Ganti Akun
+    </button>
+  </div>
+
+  <!-- Discreet Mini Switch Account Button -->
+  <button id="starla-mini-switch-btn" class="starla-mini-switch-btn" type="button" aria-label="Ganti Akun Murid" style="display: none;">
+    <span>👤</span> Ganti Akun
+  </button>
+
+  <!-- Non-Blocking Sound Pill for Autoplay Cascade -->
+  <div id="starla-sound-pill" class="starla-sound-pill" aria-live="polite">
+    <div class="starla-sound-card">
+      <span class="starla-sound-icon">🔊</span>
+      <span class="starla-sound-text">Ketuk layar untuk mengaktifkan suara murid</span>
     </div>
   </div>
 
   <script>
-    (function() {
-      var launcherOverlay = document.getElementById('smart-launcher-overlay');
-      var startBtn = document.getElementById('smart-start-btn');
-      var orientationAlert = document.getElementById('smart-orientation-alert');
+    /**
+     * STARLA Budaya - Mobile Legends Game Engine Architecture
+     * Orchestrates instant autoplay, seamless auto-resume, certificate routing,
+     * account session tracking, and game blur feedback mode.
+     */
+    window.StarlaGameEngine = (function() {
+      'use strict';
 
-      // Helper to detect mobile device
+      var STORAGE_KEY = 'starla_mlbb_session_v1';
+      var SLIDE_SCENE_PREFIX = '_player.5sAEMI5psmg.';
+
+      // Slide mapping
+      var SLIDES = {
+        INTRO: '6AR4SV4ZYat',
+        LOGIN: '5ml7jyaiXGc',
+        WELCOME: '5dLAzY4SKGI',
+        MENU_MATERI: '5iew2M44w24',
+        MENU_UTAMA: '6eHtnAfM3bY',
+        KUIS_START: '6oOWqUyP2WL',
+        KUIS_CERT: '6ddgVMlBGEg',
+        GAME_START: '6G1VrKuOhCw',
+        GAME_CERT: '6WIqLhHr1Cm'
+      };
+
+      // Benar & Salah Layer IDs for feedback game blur
+      var FEEDBACK_LAYERS = {
+        BENAR: [
+          '5wLllNjELzq', '5dINY7oQloY', '6ozsIxVZ0Ap', '6IjgPGebEz0', '6QkcRhah4eX',
+          '6rbLNT1TBry', '61rhLpSYjLN', '5lnjz9IXetF', '6R7oc9XCNf5', '6O0xCHrwpAI'
+        ],
+        SALAH: [
+          '6BvBZyuy25S', '6YjsJKEnG88', '6RqFMmFCoCW', '6AIJEmDTCL3', '5aP1qzv44A6',
+          '61Bo7wMMSKu', '6NOS9sRsO3U', '5dPQ9dmNB1n', '6AYOrp7ei5M', '6ULkx4Aw2EM'
+        ]
+      };
+
+      // State variables
+      var state = {
+        session: null,
+        userInteracted: false,
+        resumed: false
+      };
+
+      // DOM Elements
+      var el = {
+        hudBanner: null,
+        hudNama: null,
+        hudSekolah: null,
+        btnSwitchAccount: null,
+        miniSwitchBtn: null,
+        soundPill: null,
+        orientationAlert: null
+      };
+
+      // Normalization helper
+      function normalize(str) {
+        return (str || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+      }
+
+      function buildAccountKey(nama, sekolah) {
+        return normalize(nama) + '::' + normalize(sekolah);
+      }
+
+      // Storage helpers
+      function loadSession() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.nama && parsed.sekolah) {
+              return parsed;
+            }
+          }
+        } catch(e) {}
+        return null;
+      }
+
+      function saveSession(data) {
+        try {
+          if (!data) {
+            localStorage.removeItem(STORAGE_KEY);
+          } else {
+            data.updatedAt = Date.now();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          }
+        } catch(e) {}
+      }
+
+      function clearSession() {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          // Also clear Articulate native resume storage keys to prevent native popups
+          var keysToClear = [];
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && (k.indexOf('b974f4c2') !== -1 || k.indexOf('5jpgil4RGjK') !== -1)) {
+              keysToClear.push(k);
+            }
+          }
+          keysToClear.forEach(function(k) { localStorage.removeItem(k); });
+        } catch(e) {}
+      }
+
+      // Mobile device detector
       function isMobileDevice() {
         return (
           (window.isMobile && window.isMobile.any) ||
@@ -440,33 +605,24 @@
         );
       }
 
-      // Check orientation and toggle alert
+      // Orientation checker
       function updateOrientationAlert() {
-        if (!orientationAlert) return;
+        if (!el.orientationAlert) return;
         var isPortrait = window.innerHeight > window.innerWidth;
         if (isMobileDevice() && isPortrait) {
-          orientationAlert.classList.add('visible');
+          el.orientationAlert.classList.add('visible');
         } else {
-          orientationAlert.classList.remove('visible');
+          el.orientationAlert.classList.remove('visible');
         }
       }
-
-      window.addEventListener('resize', updateOrientationAlert);
-      window.addEventListener('orientationchange', updateOrientationAlert);
-      if (window.screen && window.screen.orientation) {
-        try {
-          window.screen.orientation.addEventListener('change', updateOrientationAlert);
-        } catch(e) {}
-      }
-      updateOrientationAlert();
 
       // AudioContext Unlocker
       function unlockAudioContext() {
         try {
-          var AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtxClass) {
+          var AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
             if (!window.__storyAudioCtx) {
-              window.__storyAudioCtx = new AudioCtxClass();
+              window.__storyAudioCtx = new AudioCtx();
             }
             if (window.__storyAudioCtx.state === 'suspended') {
               window.__storyAudioCtx.resume();
@@ -477,141 +633,445 @@
             src.connect(window.__storyAudioCtx.destination);
             src.start(0);
           }
-        } catch (e) {
-          console.warn("AudioContext unlock notice:", e);
-        }
+        } catch(e) {}
 
         if (window.DS && window.DS.audioContext) {
           try {
             if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
-            if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') window.DS.audioContext.ctx.resume();
-          } catch (e) {}
-        }
-      }
-
-      // Force play video & audio elements in DOM
-      function playMediaElements() {
-        var mediaElements = document.querySelectorAll('video, audio');
-        mediaElements.forEach(function(media) {
-          try {
-            media.muted = false;
-            var playPromise = media.play();
-            if (playPromise && playPromise.catch) {
-              playPromise.catch(function() {
-                media.muted = true;
-                media.play().then(function() {
-                  media.muted = false;
-                }).catch(function() {});
-              });
+            if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
+              window.DS.audioContext.ctx.resume();
             }
-          } catch(err) {}
-        });
-      }
-
-      // Trigger native Storyline start buttons
-      function triggerStorylineStart() {
-        var selectors = [
-          '.start-overlay',
-          '#mobile-start-button',
-          '.mobile-start-course-title',
-          '.play-button',
-          '.cs-play-button',
-          '.play-symbol',
-          'button.play',
-          '.cover-play-button',
-          '#preso .start-overlay',
-          '#preso button[aria-label="Play"]',
-          '#preso button[data-action="play"]'
-        ];
-        selectors.forEach(function(sel) {
-          try {
-            var els = document.querySelectorAll(sel);
-            els.forEach(function(btn) {
-              try {
-                btn.click();
-              } catch(e) {}
-            });
           } catch(e) {}
+        }
+      }
+
+      // Fullscreen & Screen Orientation Request
+      function enterFullscreenAndLandscape() {
+        if (!isMobileDevice()) return;
+
+        try {
+          var docEl = document.documentElement;
+          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+          if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
+            var p = rfs.call(docEl);
+            if (p && p.catch) p.catch(function(){});
+          }
+        } catch(e) {}
+
+        try {
+          if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock('landscape').catch(function(){});
+          }
+        } catch(e) {}
+      }
+
+      // Slide Navigation via Storyline PubSub
+      function navigateToSlide(slideId) {
+        if (!slideId) return false;
+        var fullRef = slideId.indexOf('_player.') === 0 ? slideId : (SLIDE_SCENE_PREFIX + slideId);
+        try {
+          if (window.DS && window.DS.pubSub) {
+            window.DS.pubSub.trigger('nextSlide:requesting', fullRef);
+            return true;
+          }
+        } catch(e) {
+          console.warn('[StarlaGameEngine] Navigation notice:', e);
+        }
+        return false;
+      }
+
+      // Get Current Slide ID
+      function getCurrentSlideId() {
+        try {
+          if (window.DS && window.DS.windowManager) {
+            var cur = window.DS.windowManager.getCurrentWindowSlide();
+            if (cur) {
+              if (cur.id) return cur.id;
+              if (cur.absoluteId) {
+                var parts = cur.absoluteId.split('.');
+                return parts[parts.length - 1];
+              }
+            }
+          }
+        } catch(e) {}
+        try {
+          if (window.GetPlayer) {
+            var last = window.GetPlayer().GetVar('LastSlideViewed_5jpgil4RGjK');
+            if (last) {
+              var p = last.split('.');
+              return p[p.length - 1];
+            }
+          }
+        } catch(e) {}
+        return null;
+      }
+
+      // Autoplay Cascade for Intro Video
+      function attemptVideoAutoplay() {
+        var videos = document.querySelectorAll('video');
+        if (!videos.length) return false;
+
+        videos.forEach(function(video) {
+          if (video.__starlaAutoplayHandled) return;
+          video.__starlaAutoplayHandled = true;
+
+          // Attempt full-sound autoplay first
+          video.muted = false;
+          var promise = video.play();
+          if (promise && typeof promise.catch === 'function') {
+            promise.catch(function() {
+              // Muted autoplay fallback
+              video.muted = true;
+              video.play().then(function() {
+                if (!state.userInteracted && el.soundPill) {
+                  el.soundPill.classList.add('visible');
+                }
+              }).catch(function(){});
+            });
+          }
+        });
+        return true;
+      }
+
+      // First User Touch/Click Global Handler
+      function handleFirstInteraction() {
+        if (state.userInteracted) return;
+        state.userInteracted = true;
+
+        // Unmute video without resetting time
+        var videos = document.querySelectorAll('video');
+        videos.forEach(function(v) {
+          try { v.muted = false; } catch(e){}
+        });
+
+        // Hide sound pill
+        if (el.soundPill) {
+          el.soundPill.classList.remove('visible');
+        }
+
+        unlockAudioContext();
+        enterFullscreenAndLandscape();
+
+        // Remove one-time listeners
+        ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(function(evt) {
+          window.removeEventListener(evt, handleFirstInteraction, true);
         });
       }
 
-      // Handle start button interaction
-      if (startBtn && launcherOverlay) {
-        var started = false;
-        function handleStart(e) {
-          if (started) return;
-          started = true;
-          if (e) {
+      // Auto-dismiss native Storyline modals if they mount
+      function bypassNativeModals() {
+        var startBtns = document.querySelectorAll('.start-overlay, #mobile-start-button, .mobile-start-resume-text button');
+        startBtns.forEach(function(b) {
+          try { b.click(); } catch(e){}
+        });
+
+        var resumePromptBtns = document.querySelectorAll('[data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"], [data-model-id="5jpgil4RGjK_ResumePromptSlide_btn0"]');
+        if (resumePromptBtns.length > 0) {
+          try {
+            var btnNo = document.querySelector('[data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"]');
+            if (btnNo) btnNo.click();
+            else resumePromptBtns[0].click();
+          } catch(e){}
+        }
+      }
+
+      // Apply Game Blur Mode to feedback layers
+      function processFeedbackLayers() {
+        var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
+        layers.forEach(function(layer) {
+          var layerHtml = layer.innerHTML || '';
+          var layerModelId = layer.getAttribute('data-model-id') || '';
+
+          // Check for Benar
+          var isBenar = false;
+          FEEDBACK_LAYERS.BENAR.forEach(function(id) {
+            if (layerModelId === id || layerHtml.indexOf(id) !== -1) isBenar = true;
+          });
+          if (!isBenar && (layerHtml.indexOf('Slide6Yl1XmK7vDs') !== -1 || layerHtml.indexOf('Benar') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_CorrectReview') !== -1)) {
+            isBenar = true;
+          }
+
+          // Check for Salah
+          var isSalah = false;
+          FEEDBACK_LAYERS.SALAH.forEach(function(id) {
+            if (layerModelId === id || layerHtml.indexOf(id) !== -1) isSalah = true;
+          });
+          if (!isSalah && (layerHtml.indexOf('Slide6CCYce11Vkv') !== -1 || layerHtml.indexOf('Salah') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_IncorrectReview') !== -1)) {
+            isSalah = true;
+          }
+
+          if (isBenar) {
+            layer.classList.remove('starla-feedback-salah');
+            layer.classList.add('starla-feedback-benar');
+          } else if (isSalah) {
+            layer.classList.remove('starla-feedback-benar');
+            layer.classList.add('starla-feedback-salah');
+          }
+        });
+      }
+
+      // Show MLBB HUD Banner
+      function showHudBanner(nama, sekolah) {
+        if (!el.hudBanner) return;
+        if (el.hudNama) el.hudNama.textContent = nama || 'Murid';
+        if (el.hudSekolah) el.hudSekolah.textContent = sekolah || '';
+        el.hudBanner.classList.remove('starla-hud-hidden');
+
+        if (el.miniSwitchBtn) el.miniSwitchBtn.style.display = 'inline-flex';
+
+        setTimeout(function() {
+          if (el.hudBanner) el.hudBanner.classList.add('starla-hud-hidden');
+        }, 3500);
+      }
+
+      // Switch Account Handler
+      function switchAccount() {
+        clearSession();
+        state.session = null;
+        if (window.GetPlayer) {
+          try {
+            var p = window.GetPlayer();
+            p.SetVar('TextEntry4', '');
+            p.SetVar('TextEntry5', '');
+            p.SetVar('cek_login', false);
+            p.SetVar('poin', 0);
+          } catch(e){}
+        }
+        window.location.reload();
+      }
+
+      // Intercept Menu activity buttons if already completed
+      function setupMenuInterception() {
+        function handleInterception(e) {
+          var sess = state.session || loadSession();
+          if (!sess) return;
+          var target = e.target;
+          if (!target) return;
+
+          // Check Kuis Budaya button
+          var isKuis = target.closest && (
+            target.closest('[data-model-id="60Y2D5T2PBN"]') ||
+            (target.src && target.src.indexOf('5s6NWFwiK9z') !== -1) ||
+            target.closest('div:has(img[src*="5s6NWFwiK9z"])')
+          );
+          if (isKuis && sess.kuisCompleted) {
             e.preventDefault();
-            e.stopPropagation();
-          }
-
-          // a. Request fullscreen (especially on mobile/touch)
-          try {
-            var docEl = document.documentElement;
-            var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-            if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
-              var fsPromise = rfs.call(docEl);
-              if (fsPromise && fsPromise.catch) fsPromise.catch(function() {});
+            e.stopImmediatePropagation();
+            console.log('[StarlaGameEngine] Murid telah menyelesaikan Kuis Budaya -> Mengarahkan langsung ke Sertifikat Kuis.');
+            if (window.GetPlayer) {
+              try {
+                var p = window.GetPlayer();
+                p.SetVar('TextEntry4', sess.nama);
+                p.SetVar('TextEntry5', sess.sekolah);
+              } catch(err){}
             }
-          } catch (err) {
-            console.warn("Fullscreen request notice:", err);
+            navigateToSlide(SLIDES.KUIS_CERT);
+            return;
           }
 
-          // b. Lock screen orientation to landscape
-          try {
-            if (screen.orientation && typeof screen.orientation.lock === 'function') {
-              screen.orientation.lock('landscape').catch(function(err) {
-                console.log("Orientation lock notice:", err);
-              });
+          // Check Game Anak Garuda button
+          var isGame = target.closest && (
+            target.closest('[data-model-id="5hjfDHsqC4N"]') ||
+            (target.src && target.src.indexOf('6Z7ek63QC1F') !== -1) ||
+            target.closest('div:has(img[src*="6Z7ek63QC1F"])')
+          );
+          if (isGame && sess.gameCompleted) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            console.log('[StarlaGameEngine] Murid telah menyelesaikan Game Anak Garuda -> Mengarahkan langsung ke Sertifikat Game.');
+            if (window.GetPlayer) {
+              try {
+                var p = window.GetPlayer();
+                p.SetVar('TextEntry4', sess.nama);
+                p.SetVar('TextEntry5', sess.sekolah);
+                if (typeof sess.poin === 'number') p.SetVar('poin', sess.poin);
+              } catch(err){}
             }
-          } catch (err) {
-            console.warn("Orientation lock notice:", err);
+            navigateToSlide(SLIDES.GAME_CERT);
+            return;
           }
-
-          // c. Unlock AudioContext & force play media
-          unlockAudioContext();
-          playMediaElements();
-          triggerStorylineStart();
-
-          // MutationObserver to catch media elements created during slide setup
-          var presoEl = document.getElementById('preso') || document.body;
-          var observer = new MutationObserver(function() {
-            playMediaElements();
-            triggerStorylineStart();
-          });
-          observer.observe(presoEl, { childList: true, subtree: true });
-          setTimeout(function() {
-            observer.disconnect();
-          }, 4000);
-
-          // Staggered retries for audio/video playback and start triggers
-          [50, 150, 300, 600, 1000, 1800, 2500].forEach(function(delay) {
-            setTimeout(function() {
-              playMediaElements();
-              triggerStorylineStart();
-            }, delay);
-          });
-
-          // Dispatch resize events so Storyline's scaler recalculates view
-          setTimeout(function() {
-            window.dispatchEvent(new Event('resize'));
-          }, 100);
-          setTimeout(function() {
-            window.dispatchEvent(new Event('resize'));
-          }, 500);
-
-          // d. Smoothly hide launcher overlay
-          launcherOverlay.classList.add('fade-out');
-          setTimeout(function() {
-            launcherOverlay.style.display = 'none';
-            updateOrientationAlert();
-          }, 450);
         }
 
-        startBtn.addEventListener('click', handleStart);
-        startBtn.addEventListener('touchend', handleStart);
+        document.addEventListener('click', handleInterception, true);
+        document.addEventListener('touchend', handleInterception, true);
       }
+
+      // Main Cycle Monitor
+      function runCycle() {
+        bypassNativeModals();
+        processFeedbackLayers();
+        attemptVideoAutoplay();
+
+        if (!window.GetPlayer) return;
+        var player = window.GetPlayer();
+
+        var curNama = '';
+        var curSekolah = '';
+        var curLogin = false;
+        var curPoin = 0;
+        var curScore = 0;
+
+        try { curNama = player.GetVar('TextEntry4') || ''; } catch(e){}
+        try { curSekolah = player.GetVar('TextEntry5') || ''; } catch(e){}
+        try { curLogin = player.GetVar('cek_login') || false; } catch(e){}
+        try { curPoin = player.GetVar('poin') || 0; } catch(e){}
+        try { curScore = player.GetVar('6pq3GkKswiA.$Score') || 0; } catch(e){}
+
+        var curSlideId = getCurrentSlideId();
+
+        // 1. Check if returning session needs to be restored
+        if (state.session && !state.resumed) {
+          state.resumed = true;
+          try {
+            player.SetVar('TextEntry4', state.session.nama);
+            player.SetVar('TextEntry5', state.session.sekolah);
+            player.SetVar('cek_login', true);
+            if (typeof state.session.poin === 'number') {
+              player.SetVar('poin', state.session.poin);
+            }
+          } catch(e){}
+
+          var targetSlide = state.session.lastSlideId;
+          if (!targetSlide || targetSlide === SLIDES.INTRO || targetSlide === SLIDES.LOGIN || targetSlide === SLIDES.WELCOME) {
+            targetSlide = SLIDES.MENU_UTAMA;
+          }
+
+          console.log('[StarlaGameEngine] Auto-resume ke halaman:', targetSlide);
+          showHudBanner(state.session.nama, state.session.sekolah);
+
+          setTimeout(function() { navigateToSlide(targetSlide); }, 150);
+          setTimeout(function() { navigateToSlide(targetSlide); }, 500);
+          setTimeout(function() { navigateToSlide(targetSlide); }, 1200);
+        }
+
+        // 2. Track new login or identity change
+        if (curNama && curSekolah && (curLogin || curSlideId === SLIDES.WELCOME || curSlideId === SLIDES.MENU_MATERI || curSlideId === SLIDES.MENU_UTAMA)) {
+          var accountKey = buildAccountKey(curNama, curSekolah);
+          if (!state.session || state.session.accountKey !== accountKey) {
+            console.log('[StarlaGameEngine] Murid baru terdeteksi:', curNama, curSekolah);
+            state.session = {
+              accountKey: accountKey,
+              nama: curNama,
+              sekolah: curSekolah,
+              cek_login: true,
+              poin: curPoin || 0,
+              score: curScore || 0,
+              lastSlideId: curSlideId || SLIDES.MENU_UTAMA,
+              kuisCompleted: false,
+              gameCompleted: false
+            };
+            saveSession(state.session);
+            showHudBanner(state.session.nama, state.session.sekolah);
+          }
+        }
+
+        // 3. Track slide progression and certificate completion
+        if (state.session && curSlideId) {
+          var updated = false;
+
+          if (curSlideId !== SLIDES.INTRO && curSlideId !== SLIDES.LOGIN) {
+            if (state.session.lastSlideId !== curSlideId) {
+              state.session.lastSlideId = curSlideId;
+              updated = true;
+            }
+          }
+
+          if (curSlideId === SLIDES.KUIS_CERT) {
+            if (!state.session.kuisCompleted) {
+              state.session.kuisCompleted = true;
+              updated = true;
+              console.log('[StarlaGameEngine] Kuis Budaya diselesaikan oleh murid!');
+            }
+            if (curScore) {
+              state.session.score = curScore;
+              updated = true;
+            }
+          }
+
+          if (curSlideId === SLIDES.GAME_CERT) {
+            if (!state.session.gameCompleted) {
+              state.session.gameCompleted = true;
+              updated = true;
+              console.log('[StarlaGameEngine] Game Anak Garuda diselesaikan oleh murid!');
+            }
+            if (curPoin) {
+              state.session.poin = curPoin;
+              updated = true;
+            }
+          }
+
+          if (updated) {
+            saveSession(state.session);
+          }
+        }
+      }
+
+      // Initialization
+      function init() {
+        el.hudBanner = document.getElementById('starla-hud-banner');
+        el.hudNama = document.getElementById('starla-hud-nama');
+        el.hudSekolah = document.getElementById('starla-hud-sekolah');
+        el.btnSwitchAccount = document.getElementById('starla-btn-switch-account');
+        el.miniSwitchBtn = document.getElementById('starla-mini-switch-btn');
+        el.soundPill = document.getElementById('starla-sound-pill');
+        el.orientationAlert = document.getElementById('smart-orientation-alert');
+
+        state.session = loadSession();
+
+        if (el.btnSwitchAccount) {
+          el.btnSwitchAccount.addEventListener('click', switchAccount);
+        }
+        if (el.miniSwitchBtn) {
+          el.miniSwitchBtn.addEventListener('click', switchAccount);
+          if (state.session) {
+            el.miniSwitchBtn.style.display = 'inline-flex';
+          }
+        }
+
+        if (el.soundPill) {
+          el.soundPill.addEventListener('click', handleFirstInteraction);
+          el.soundPill.addEventListener('touchend', handleFirstInteraction);
+        }
+
+        ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(function(evt) {
+          window.addEventListener(evt, handleFirstInteraction, true);
+        });
+
+        window.addEventListener('resize', updateOrientationAlert);
+        window.addEventListener('orientationchange', updateOrientationAlert);
+        if (window.screen && window.screen.orientation) {
+          try { window.screen.orientation.addEventListener('change', updateOrientationAlert); } catch(e){}
+        }
+        updateOrientationAlert();
+
+        setupMenuInterception();
+
+        var observer = new MutationObserver(function() {
+          attemptVideoAutoplay();
+          bypassNativeModals();
+          processFeedbackLayers();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        setInterval(runCycle, 250);
+        runCycle();
+
+        console.log('[StarlaGameEngine] Mobile Legends Architecture initialized successfully.');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      return {
+        init: init,
+        getSession: function() { return state.session; },
+        switchAccount: switchAccount,
+        navigateToSlide: navigateToSlide,
+        getCurrentSlideId: getCurrentSlideId
+      };
     })();
   </script>
   <!-- 360 -->
