@@ -114,9 +114,6 @@
     });
     ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
       document.addEventListener(evt, function() {
-        if (window.StarlaBudaya && typeof window.StarlaBudaya.updateFullscreenIcon === 'function') {
-          window.StarlaBudaya.updateFullscreenIcon();
-        }
         setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
       });
     });
@@ -649,34 +646,47 @@
       line-height: 1.4;
     }
 
-    /* 8. FASE 1: Full-Screen Sharp Black Blur Backdrop strictly UNDER all images & objects */
-    .starla-layer-backdrop {
-      position: absolute !important;
-      inset: -100vmax !important;
-      top: -100vmax !important;
-      left: -100vmax !important;
-      width: 300vmax !important;
-      height: 300vmax !important;
-      border-radius: 0 !important;
-      background: rgba(5, 8, 17, 0.72) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      pointer-events: none !important;
-      z-index: 0 !important;
-    }
-
-    #starla-state-backdrop {
-      display: none !important;
-    }
-
+    /* 8. FASE 2: Under-Layer State Backdrop (Strictly bottom-most at z-index: -1) */
     .slide-layer:not(.base-layer) {
+      isolation: isolate !important;
       border-radius: 0 !important;
       background: transparent !important;
       position: absolute !important;
     }
 
-    /* Stacking context: all slide objects, images, vectors, text strictly above backdrop (z-index 5+) */
-    .slide-layer:not(.base-layer) > *:not(.starla-layer-backdrop),
+    .starla-state-backdrop,
+    .starla-layer-backdrop {
+      position: absolute !important;
+      top: -50vh !important;
+      left: -50vw !important;
+      width: 200vw !important;
+      height: 200vh !important;
+      z-index: -1 !important;
+      border-radius: 0 !important;
+      pointer-events: none !important;
+      background: rgba(5, 8, 17, 0.72) !important;
+      backdrop-filter: blur(12px) saturate(130%) !important;
+      -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+    }
+
+    /* Stacking context: all slide objects, images, vectors, text strictly above backdrop (z-index 10) */
+    [data-model-id="6EfvCxuLoY5"],
+    [data-model-id="5ZAJjyZwSHr"],
+    [data-model-id="6qmYZKenWib"],
+    [data-model-id="5iBaskfo7HO"],
+    [data-model-id="6buBqvk3zpe"],
+    [data-model-id="5ZMtYjS7oxd"],
+    [data-model-id="5Zr3famKnLd"],
+    [data-model-id="6NmAh1Gt8vY"],
+    [data-model-id="6eb4PmDsps1"],
+    [data-model-id],
+    .slide-object,
+    .slide-object img,
+    .slide-object svg,
+    [data-acc-text*="close" i],
+    [data-acc-text*="tutup" i],
+    [data-acc-text*="silang" i],
+    .slide-layer:not(.base-layer) > *:not(.starla-state-backdrop):not(.starla-layer-backdrop),
     .slide-layer:not(.base-layer) .slide-object,
     .slide-layer:not(.base-layer) [data-model-id],
     .slide-layer:not(.base-layer) img,
@@ -685,13 +695,11 @@
     .slide-layer:not(.base-layer) text,
     .slide-layer:not(.base-layer) button,
     .slide-layer:not(.base-layer) .vectorshape,
-    [data-model-id="6EfvCxuLoY5"],
-    [data-model-id="6qmYZKenWib"],
-    [data-model-id="5iBaskfo7HO"],
-    [data-model-id="6buBqvk3zpe"],
     img[src*="6EfvCxuLoY5"],
+    img[src*="5ZAJjyZwSHr"],
+    img[src*="6ljF2bhskoS"],
     img[src*="6qmYZKenWib"] {
-      z-index: 5 !important;
+      z-index: 10 !important;
       filter: none !important;
       -webkit-font-smoothing: antialiased;
     }
@@ -700,17 +708,19 @@
     .slide-layer:not(.base-layer) svg,
     .slide-layer:not(.base-layer) canvas,
     img[src*="6EfvCxuLoY5"],
+    img[src*="5ZAJjyZwSHr"],
+    img[src*="6ljF2bhskoS"],
     img[src*="6qmYZKenWib"] {
       position: relative !important;
-      z-index: 6 !important;
+      z-index: 10 !important;
     }
 
     .layer-modal-bg {
       border-radius: 0 !important;
       background: rgba(5, 8, 17, 0.72) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      z-index: 0 !important;
+      backdrop-filter: blur(12px) saturate(130%) !important;
+      -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+      z-index: -1 !important;
     }
 
     /* Feedback layer accents */
@@ -724,47 +734,6 @@
       box-shadow: inset 0 0 35px rgba(231, 76, 60, 0.45) !important;
       border: 2px solid rgba(231, 76, 60, 0.8) !important;
       border-radius: 0 !important;
-    }
-
-    /* 9. Top-Right Transparent Fullscreen Icon (#starla-fs-btn) */
-    #starla-fs-btn {
-      position: fixed;
-      top: 14px;
-      right: 14px;
-      width: 38px;
-      height: 38px;
-      z-index: 99998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.24);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      color: #fbbf24;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: opacity 0.35s ease, background 0.2s ease, transform 0.15s ease;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #starla-fs-btn.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #starla-fs-btn:hover {
-      background: rgba(15, 23, 42, 0.45);
-      border-color: rgba(251, 191, 36, 0.55);
-      transform: scale(1.06);
-    }
-
-    #starla-fs-btn:active {
-      transform: scale(0.94);
     }
   </style>
 </head>
@@ -875,19 +844,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Top-Right Transparent Fullscreen Icon -->
-  <button id="starla-fs-btn" class="starla-fs-btn" type="button" aria-label="Layar Penuh" title="Layar Penuh">
-    <svg id="starla-fs-icon-enter" class="starla-fs-icon-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-    </svg>
-    <svg id="starla-fs-icon-exit" class="starla-fs-icon-exit" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-    </svg>
-  </button>
-
-  <!-- Fallback element (strictly hidden, layers use .starla-layer-backdrop) -->
-  <div id="starla-state-backdrop" class="starla-state-backdrop" aria-hidden="true" style="display:none !important;"></div>
 
   <!-- STARLA Budaya - Front Stage 3D Nusantara Motion, Web Audio API & Mulai Controller -->
   <script>
@@ -1093,13 +1049,25 @@
       // User interaction listener to start ambient sound gracefully
       var gestureEvents = ['pointerdown', 'pointermove', 'touchstart', 'keydown'];
       function onInitialGesture() {
+        var audio = StarlaAudio.getContext();
+        if (audio && audio.state === 'suspended') {
+          audio.resume().catch(function(){});
+        }
         StarlaAudio.startAmbient();
         gestureEvents.forEach(function(evt) {
           window.removeEventListener(evt, onInitialGesture, { passive: true });
+          if (stageEl) stageEl.removeEventListener(evt, onInitialGesture, { passive: true });
         });
       }
       gestureEvents.forEach(function(evt) {
         window.addEventListener(evt, onInitialGesture, { passive: true, once: true });
+        if (stageEl) stageEl.addEventListener(evt, onInitialGesture, { passive: true, once: true });
+      });
+      document.addEventListener('DOMContentLoaded', function() {
+        try { StarlaAudio.startAmbient(); } catch(e){}
+      });
+      window.addEventListener('load', function() {
+        try { StarlaAudio.startAmbient(); } catch(e){}
       });
       try { StarlaAudio.startAmbient(); } catch(e){}
 
@@ -1115,7 +1083,7 @@
         var playPromise = video.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch(function(err) {
-            // Immediate fallback to muted play within <10ms to prevent frozen frame 00:00
+            // Immediate fallback within <5ms: muted = true, play() to prevent frozen frame 00:00
             setTimeout(function() {
               try {
                 video.muted = true;
@@ -1176,17 +1144,23 @@
         return res;
       };
 
-      // FASE 2: Synchronous Rock-Solid Mobile Pipeline
+      // FASE 4: Synchronous Start Engine & User Activation Pipeline
       function handleStartAction(e) {
         if (isStarted) return;
         isStarted = true;
         window.__starlaUserInteracted = true;
 
-        // 1. Play click SFX and fade-out ambient backsound
-        StarlaAudio.playClickSfx();
-        StarlaAudio.fadeOutAmbient(0.6);
+        if (e && e.type === 'touchend' && typeof e.preventDefault === 'function') {
+          try { e.preventDefault(); } catch(err){}
+        }
 
-        // 2. Synchronous AudioContext unlock
+        // a. Putar efek suara klik WebAudio dan fade-out backsound halaman depan
+        try {
+          StarlaAudio.playClickSfx();
+          StarlaAudio.fadeOutAmbient(0.6);
+        } catch(err){}
+
+        // b. Buka kunci AudioContext dan atur seluruh <video> / <audio> ke muted = false; volume = 1;
         try {
           var AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (!window.__storyAudioCtx && AudioCtx) {
@@ -1203,7 +1177,22 @@
           }
         } catch(err){}
 
-        // 3. Send full event sequence to #mobile-start-button, .start-overlay button, .play-button
+        try {
+          var allMedia = document.querySelectorAll('video, audio');
+          allMedia.forEach(function(m) {
+            try {
+              m.muted = false;
+              m.volume = 1;
+              if (m.tagName && m.tagName.toUpperCase() === 'VIDEO') {
+                m.setAttribute('playsinline', '');
+                m.setAttribute('webkit-playsinline', '');
+                m.playsInline = true;
+              }
+            } catch(e){}
+          });
+        } catch(err){}
+
+        // c. Picu start engine Storyline secara langsung
         var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
         startBtns.forEach(function(targetEl) {
           ['touchstart', 'touchend', 'mousedown', 'mouseup', 'click'].forEach(function(evtName) {
@@ -1221,7 +1210,12 @@
           try { targetEl.click(); } catch(err){}
         });
 
-        // Storyline internal start functions if present
+        // Sembunyikan #mobile-start-container setelah diklik
+        var mContainer = document.getElementById('mobile-start-container');
+        if (mContainer) {
+          mContainer.style.display = 'none';
+        }
+
         try {
           if (window.DS && window.DS.player && typeof window.DS.player.start === 'function') {
             window.DS.player.start();
@@ -1233,47 +1227,96 @@
           }
         } catch(err){}
 
-        // 4. Mobile Video Autoplay Guard
-        var mediaEls = document.querySelectorAll('video');
-        mediaEls.forEach(function(el) {
-          enforceVideoPlay(el);
-        });
+        // d. Perluas Layar Otomatis di Semua Perangkat (SYNCHRONOUS, no setTimeout)
+        var docEl = document.documentElement;
+        var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+        var isMobileCoarse = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
-        // 5. Asynchronous Fullscreen & Orientation Lock in try-catch (setTimeout 60ms)
-        setTimeout(function() {
+        function tryLockLandscape() {
+          if (isMobileCoarse && window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+            try {
+              window.screen.orientation.lock('landscape').catch(function(){});
+            } catch(e){}
+          }
+        }
+
+        if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
           try {
-            var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-            if (isTouch) {
-              var docEl = document.documentElement;
-              var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-              if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
-                var pr = rfs.call(docEl);
-                if (pr && typeof pr.catch === 'function') pr.catch(function(){});
-              }
-              if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                screen.orientation.lock('landscape').catch(function(){});
-              }
+            var fsPromise = rfs.call(docEl);
+            if (fsPromise && typeof fsPromise.then === 'function') {
+              fsPromise.then(function() {
+                tryLockLandscape();
+                window.dispatchEvent(new Event('resize'));
+              }).catch(function(err) {
+                console.log('[StarlaBudaya] Fullscreen notice:', err);
+              });
             }
-          } catch(err){}
-        }, 60);
+          } catch(fsErr) {
+            console.log('[StarlaBudaya] Fullscreen call error:', fsErr);
+          }
+        }
+        // Direct landscape lock attempt fallback
+        tryLockLandscape();
 
-        // Fade out front stage smoothly
+        // e. Hilangkan #starla-front-stage dengan transisi halus
         if (stageEl) {
-          stageEl.style.opacity = '0';
           stageEl.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+          stageEl.style.opacity = '0';
+          stageEl.style.pointerEvents = 'none';
           stageEl.style.transform = 'scale(1.02)';
           setTimeout(function() {
             stageEl.style.display = 'none';
           }, 460);
         }
 
-        // Show fullscreen icon at top-right
-        var fsBtn = document.getElementById('starla-fs-btn');
-        if (fsBtn) {
-          fsBtn.classList.add('visible');
+        // 2. Video Autoplay Watcher & Auto-Scale Responsif Tanpa Jeda (MutationObserver + rAF 3s)
+        var watchStart = Date.now();
+        var videoObserver = null;
+
+        function scanAndPlayVideos() {
+          var vids = document.querySelectorAll('video');
+          vids.forEach(function(v) {
+            enforceVideoPlay(v);
+          });
         }
 
-        // 6. Automatic Recovery Watchdog at 250ms, 700ms, and 1400ms
+        scanAndPlayVideos();
+
+        if (window.MutationObserver) {
+          videoObserver = new MutationObserver(function() {
+            scanAndPlayVideos();
+          });
+          videoObserver.observe(document.body || document.documentElement, {
+            childList: true,
+            subtree: true
+          });
+        }
+
+        function videoWatcherLoop() {
+          scanAndPlayVideos();
+          if (Date.now() - watchStart < 3000) {
+            requestAnimationFrame(videoWatcherLoop);
+          } else {
+            if (videoObserver) {
+              try { videoObserver.disconnect(); } catch(e){}
+              videoObserver = null;
+            }
+          }
+        }
+        requestAnimationFrame(videoWatcherLoop);
+
+        // Picu window.dispatchEvent(new Event('resize')) pada 0ms, 150ms, 400ms, 800ms
+        [0, 150, 400, 800].forEach(function(delay) {
+          if (delay === 0) {
+            window.dispatchEvent(new Event('resize'));
+          } else {
+            setTimeout(function() {
+              window.dispatchEvent(new Event('resize'));
+            }, delay);
+          }
+        });
+
+        // 3. Automatic Recovery Watchdog at 250ms, 700ms, and 1400ms
         [250, 700, 1400].forEach(function(delay) {
           setTimeout(function() {
             try {
@@ -1308,7 +1351,6 @@
         startBtn.addEventListener('pointerdown', function() {
           StarlaAudio.playClickSfx();
         });
-        startBtn.addEventListener('pointerup', handleStartAction);
         startBtn.addEventListener('click', handleStartAction);
         startBtn.addEventListener('touchend', handleStartAction);
       }
@@ -1395,22 +1437,7 @@
         }
       }
 
-      // Fullscreen Icon & Toggling
-      function updateFullscreenIcon() {
-        var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-        var iconEnter = document.getElementById('starla-fs-icon-enter');
-        var iconExit = document.getElementById('starla-fs-icon-exit');
-        if (iconEnter && iconExit) {
-          if (isFs) {
-            iconEnter.style.display = 'none';
-            iconExit.style.display = 'block';
-          } else {
-            iconEnter.style.display = 'block';
-            iconExit.style.display = 'none';
-          }
-        }
-      }
-
+      // Fullscreen Toggling Utility
       function toggleFullscreen() {
         var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
         if (!isFs) {
@@ -1479,11 +1506,13 @@
         if (!videos.length) return false;
 
         videos.forEach(function(video) {
-          if (video.__starlaAutoplayHandled) return;
+          if (video.__starlaAutoplayHandled && !video.paused) return;
           video.__starlaAutoplayHandled = true;
 
           video.setAttribute('playsinline', '');
           video.setAttribute('webkit-playsinline', '');
+          video.playsInline = true;
+
           if (!window.__starlaUserInteracted) {
             video.muted = true;
           } else {
@@ -1493,12 +1522,28 @@
 
           var promise = video.play();
           if (promise && typeof promise.catch === 'function') {
-            promise.catch(function() {
-              if (!window.__starlaUserInteracted) {
-                video.muted = true;
-                var p2 = video.play();
-                if (p2 && typeof p2.catch === 'function') p2.catch(function(){});
-              }
+            promise.catch(function(err) {
+              // Jika browser mobile memblokir audio asinkron (NotAllowedError), langsung jalankan video.muted = true; video.play() dalam <5ms
+              setTimeout(function() {
+                try {
+                  video.muted = true;
+                  var p2 = video.play();
+                  if (p2 && typeof p2.catch === 'function') p2.catch(function(){});
+                } catch(e){}
+              }, 0);
+
+              var unmuteOnNextTouch = function() {
+                try {
+                  video.muted = false;
+                  video.volume = 1;
+                } catch(e){}
+                ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
+                  document.removeEventListener(evt, unmuteOnNextTouch, true);
+                });
+              };
+              ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
+                document.addEventListener(evt, unmuteOnNextTouch, true);
+              });
             });
           }
         });
@@ -1526,28 +1571,33 @@
         }
       }
 
-      // FASE 1: Apply Full Screen Sharp Under-Image Backdrop on ALL States & Layers (Strictly bottom-most z-index: 0)
+      // FASE 2: Apply Under-Layer State Backdrop on ALL States & Layers (Strictly bottom-most z-index: -1)
       function processFeedbackLayers() {
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
 
         layers.forEach(function(layer) {
-          // Prepend under-image black blur backdrop if not already inserted
-          if (!layer.querySelector('.starla-layer-backdrop')) {
-            var backdrop = document.createElement('div');
-            backdrop.className = 'starla-layer-backdrop';
+          layer.style.setProperty('isolation', 'isolate', 'important');
+
+          // Prepend under-layer black blur backdrop as first child
+          var backdrop = layer.querySelector('.starla-state-backdrop, .starla-layer-backdrop');
+          if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'starla-state-backdrop';
             backdrop.setAttribute('aria-hidden', 'true');
+            layer.insertBefore(backdrop, layer.firstChild);
+          } else if (backdrop !== layer.firstChild) {
             layer.insertBefore(backdrop, layer.firstChild);
           }
 
-          // Explicitly ensure images and objects (including 6EfvCxuLoY5 and 6qmYZKenWib) have z-index >= 5
-          var childObjects = layer.querySelectorAll('.slide-object, [data-model-id], img, svg, canvas');
+          // Explicitly ensure images, buttons and objects (including 6EfvCxuLoY5, 5ZAJjyZwSHr, close button) have z-index: 10
+          var childObjects = layer.querySelectorAll('[data-model-id="6EfvCxuLoY5"], [data-model-id="5ZAJjyZwSHr"], [data-model-id], .slide-object, .slide-object img, .slide-object svg, [data-acc-text*="close" i], [data-acc-text*="tutup" i], [data-acc-text*="silang" i]');
           childObjects.forEach(function(obj) {
-            obj.style.zIndex = '5';
+            obj.style.setProperty('z-index', '10', 'important');
           });
           var imgElements = layer.querySelectorAll('img, svg, canvas');
           imgElements.forEach(function(img) {
-            img.style.position = 'relative';
-            img.style.zIndex = '6';
+            img.style.setProperty('position', 'relative', 'important');
+            img.style.setProperty('z-index', '10', 'important');
           });
 
           var layerHtml = layer.innerHTML || '';
@@ -1739,11 +1789,6 @@
         setupImageFallbacks();
         setupMenuInterception();
 
-        var fsBtn = document.getElementById('starla-fs-btn');
-        if (fsBtn) {
-          fsBtn.addEventListener('click', toggleFullscreen);
-        }
-
         window.addEventListener('resize', updateOrientationAlert);
         window.addEventListener('orientationchange', function() {
           setTimeout(function() {
@@ -1768,7 +1813,6 @@
           });
         }
         updateOrientationAlert();
-        updateFullscreenIcon();
 
         // Dispatch initial resize events for responsive auto-scale
         [100, 300, 600, 1200, 1800].forEach(function(delay) {
@@ -1804,7 +1848,6 @@
         navigateToSlide: navigateToSlide,
         getCurrentSlideId: getCurrentSlideId,
         updateOrientationAlert: updateOrientationAlert,
-        updateFullscreenIcon: updateFullscreenIcon,
         toggleFullscreen: toggleFullscreen
       };
     })();
