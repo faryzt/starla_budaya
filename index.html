@@ -129,7 +129,10 @@
   </script>
   <!-- Created using Storyline 3 - http://www.articulate.com  -->
   <!-- version: 3.20.30234.0 -->
-  <title>STARLA BUDAYA GO</title>
+  <title>STARLA BUDAYA</title>
+  <link rel=preconnect href="https://fonts.googleapis.com">
+  <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Philosopher:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
   <meta http-equiv="x-ua-compatible" content="IE=edge"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -277,16 +280,24 @@
       border: none !important;
     }
 
-    /* 4. Complete Non-Destructive Suppression of Native Articulate Modals */
+    /* 4. Complete Non-Destructive Suppression of Native Articulate Modals & Mobile Titles */
     #mobile-start-container,
     .mobile-start-overlay,
     .mobile-start-course-title,
+    .mobile-start-title,
     .mobile-start-overlay-thumbnail,
     .mobile-start-resume-text,
-    .mobile-load-title-overlay {
+    .mobile-load-title-overlay,
+    .mobile-load-title {
       background: transparent !important;
       display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
       pointer-events: none !important;
+      font-size: 0 !important;
+      height: 0 !important;
+      width: 0 !important;
+      overflow: hidden !important;
     }
 
     #mobile-start-button {
@@ -294,6 +305,8 @@
       background: transparent !important;
       border: none !important;
       cursor: pointer !important;
+      font-size: 0 !important;
+      color: transparent !important;
     }
 
     .resume-prompt,
@@ -306,57 +319,58 @@
       visibility: hidden !important;
     }
 
-    /* 5. Hyper-Realistic Front Stage (Motion Loading + 1 Start Button) */
+    /* 5. Front Stage: 3D Nusantara Line Art Motion & Pure MULAI Button */
     #starla-front-stage {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100dvh;
       z-index: 2147483646;
-      background: radial-gradient(ellipse at 50% 36%, #131c31 0%, #0a0f1d 48%, #050811 100%);
+      background: radial-gradient(ellipse at 50% 40%, #0d1323 0%, #080c18 55%, #050811 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: 'Cinzel Decorative', 'Philosopher', 'Cinzel', 'Trajan Pro', Georgia, serif;
       user-select: none;
       -webkit-user-select: none;
-      transition: opacity 0.55s ease, transform 0.55s ease;
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
 
     .starla-volumetric-backdrop {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 50% 28%, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0) 65%);
+      background: radial-gradient(circle at 50% 42%, rgba(245, 158, 11, 0.16) 0%, rgba(13, 19, 35, 0.4) 50%, rgba(5, 8, 17, 0.95) 100%);
       pointer-events: none;
     }
 
-    .starla-batik-pattern {
+    .starla-batik-grid {
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(rgba(245, 158, 11, 0.12) 1.5px, transparent 1.5px),
-                        radial-gradient(rgba(245, 158, 11, 0.08) 1.5px, transparent 1.5px);
-      background-size: 36px 36px;
-      background-position: 0 0, 18px 18px;
-      opacity: 0.42;
+      background-image: 
+        radial-gradient(rgba(251, 191, 36, 0.12) 1.2px, transparent 1.2px),
+        radial-gradient(rgba(217, 119, 6, 0.08) 1.2px, transparent 1.2px);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+      opacity: 0.35;
       pointer-events: none;
     }
 
     .starla-ambient-glow {
       position: absolute;
-      width: 440px;
-      height: 440px;
+      width: 480px;
+      height: 480px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.26) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 75%);
-      filter: blur(40px);
-      animation: starlaAuraPulse 3.5s ease-in-out infinite alternate;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.24) 0%, rgba(217, 119, 6, 0.08) 48%, transparent 72%);
+      filter: blur(48px);
+      animation: starlaAuraPulse 4s ease-in-out infinite alternate;
       pointer-events: none;
     }
 
     @keyframes starlaAuraPulse {
-      0% { transform: scale(0.92); opacity: 0.65; }
-      100% { transform: scale(1.16); opacity: 0.98; }
+      0% { transform: scale(0.9); opacity: 0.6; }
+      100% { transform: scale(1.18); opacity: 0.95; }
     }
 
     .starla-stage-content {
@@ -367,182 +381,137 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 20px;
+      padding: 16px;
       box-sizing: border-box;
       max-width: 90vw;
     }
 
-    .starla-emblem-wrap {
-      position: relative;
-      width: 176px;
-      height: 176px;
+    /* 3D Nusantara Line Art Scene (Kawung, Parang, Mandala Lattice) */
+    .starla-3d-scene {
+      perspective: 1100px;
+      perspective-origin: center center;
+      width: 360px;
+      height: 360px;
+      max-width: 80vw;
+      max-height: 48vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 22px;
-    }
-
-    .starla-specular-beam {
-      position: absolute;
-      width: 140%;
-      height: 140%;
-      background: radial-gradient(circle, rgba(254, 240, 138, 0.18) 0%, transparent 60%);
-      animation: starlaBeamShimmer 4s ease-in-out infinite alternate;
-      pointer-events: none;
-    }
-
-    @keyframes starlaBeamShimmer {
-      0% { opacity: 0.3; transform: scale(0.88); }
-      100% { opacity: 0.85; transform: scale(1.12); }
-    }
-
-    .starla-mandala-ring {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      animation: starlaMandalaRotate 22s linear infinite;
-      pointer-events: none;
-    }
-
-    @keyframes starlaMandalaRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .starla-gunungan-center {
       position: relative;
-      width: 96px;
-      height: 112px;
-      z-index: 2;
-      animation: starlaGununganBob 3s ease-in-out infinite;
-      filter: drop-shadow(0 10px 28px rgba(245, 158, 11, 0.65));
-    }
-
-    @keyframes starlaGununganBob {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-4px) scale(1.03); }
-    }
-
-    .starla-particle {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #fbbf24;
-      box-shadow: 0 0 10px #fbbf24, 0 0 16px #f59e0b;
-      opacity: 0.75;
+      margin-bottom: 34px;
       pointer-events: none;
     }
 
-    .starla-particle.p1 { top: 12px; left: 32px; animation: pFloat1 4s ease-in-out infinite alternate; }
-    .starla-particle.p2 { top: 24px; right: 28px; animation: pFloat2 3.5s ease-in-out infinite alternate; }
-    .starla-particle.p3 { bottom: 20px; left: 24px; animation: pFloat3 4.5s ease-in-out infinite alternate; }
-    .starla-particle.p4 { bottom: 16px; right: 36px; animation: pFloat1 3.8s ease-in-out infinite alternate; }
-
-    @keyframes pFloat1 { 0% { transform: translate(0, 0); } 100% { transform: translate(8px, -12px); } }
-    @keyframes pFloat2 { 0% { transform: translate(0, 0); } 100% { transform: translate(-10px, -8px); } }
-    @keyframes pFloat3 { 0% { transform: translate(0, 0); } 100% { transform: translate(6px, 10px); } }
-
-    .starla-brand-group {
-      margin-bottom: 22px;
-    }
-
-    .starla-title {
-      font-size: 27px;
-      font-weight: 900;
-      letter-spacing: 5.5px;
-      text-transform: uppercase;
-      margin: 0 0 6px 0;
-      background: linear-gradient(135deg, #ffffff 0%, #fef08a 32%, #fbbf24 68%, #d97706 92%, #92400e 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 3px 16px rgba(245, 158, 11, 0.55));
-      text-align: center;
-    }
-
-    .starla-tagline {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      color: #94a3b8;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    .starla-progress-box {
-      width: 290px;
-      max-width: 82vw;
-      margin: 0 auto;
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .starla-progress-box.starla-box-hidden {
-      opacity: 0;
-      transform: scale(0.95);
-      pointer-events: none;
-      display: none;
-    }
-
-    .starla-progress-track {
+    .starla-3d-rig {
       width: 100%;
-      height: 7px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.45);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-bottom: 10px;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.2);
-    }
-
-    .starla-progress-fill {
-      width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #b45309 0%, #d97706 30%, #f59e0b 70%, #fef08a 100%);
-      border-radius: 999px;
-      box-shadow: 0 0 16px rgba(245, 158, 11, 0.95);
-      transition: width 0.2s ease-out;
-    }
-
-    .starla-progress-info {
+      position: relative;
+      transform-style: preserve-3d;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      justify-content: center;
+      animation: starlaParallaxRig 14s ease-in-out infinite alternate;
     }
 
-    .starla-status-text {
-      color: #cbd5e1;
-      font-weight: 500;
-      font-style: italic;
+    @keyframes starlaParallaxRig {
+      0% {
+        transform: rotateX(15deg) rotateY(-18deg) rotateZ(-3deg);
+      }
+      50% {
+        transform: rotateX(-12deg) rotateY(16deg) rotateZ(3deg);
+      }
+      100% {
+        transform: rotateX(14deg) rotateY(-12deg) rotateZ(-1deg);
+      }
     }
 
-    .starla-percent-text {
-      color: #fbbf24;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+    .starla-lineart-layer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.42));
     }
 
-    /* 6. Tactile Glass-Gold Bevel Single Start Button (#starla-start-btn) */
+    .starla-lineart-layer.layer-outer {
+      width: 350px;
+      height: 350px;
+      margin-top: -175px;
+      margin-left: -175px;
+      transform: translateZ(-30px);
+      animation: starlaRotOuter 34s linear infinite;
+    }
+
+    .starla-lineart-layer.layer-mid {
+      width: 280px;
+      height: 280px;
+      margin-top: -140px;
+      margin-left: -140px;
+      transform: translateZ(12px);
+      animation: starlaRotMid 24s linear infinite reverse;
+    }
+
+    .starla-lineart-layer.layer-inner {
+      width: 190px;
+      height: 190px;
+      margin-top: -95px;
+      margin-left: -95px;
+      transform: translateZ(48px);
+      animation: starlaRotInner 18s linear infinite;
+    }
+
+    @keyframes starlaRotOuter {
+      0% { transform: translateZ(-30px) rotate(0deg); }
+      100% { transform: translateZ(-30px) rotate(360deg); }
+    }
+
+    @keyframes starlaRotMid {
+      0% { transform: translateZ(12px) rotate(0deg); }
+      100% { transform: translateZ(12px) rotate(360deg); }
+    }
+
+    @keyframes starlaRotInner {
+      0% { transform: translateZ(48px) rotate(0deg); }
+      100% { transform: translateZ(48px) rotate(360deg); }
+    }
+
+    .starla-3d-shimmer {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(254, 240, 138, 0.2) 0%, rgba(251, 191, 36, 0.08) 45%, transparent 70%);
+      transform: translateZ(24px);
+      filter: blur(18px);
+      animation: starlaAuraShimmer 4s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes starlaAuraShimmer {
+      0% { transform: translateZ(24px) scale(0.86); opacity: 0.45; }
+      100% { transform: translateZ(24px) scale(1.16); opacity: 0.92; }
+    }
+
+    /* 6. Pure Nusantara MULAI Button (Tanpa Ikon) */
     .starla-start-btn {
       position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 15px 52px;
+      padding: 16px 64px;
       border-radius: 999px;
-      background: linear-gradient(180deg, #fef08a 0%, #f59e0b 38%, #d97706 78%, #b45309 100%);
+      background: linear-gradient(180deg, #fef08a 0%, #f59e0b 38%, #d97706 78%, #92400e 100%);
       border: 1.5px solid #fef08a;
       box-shadow: 
         0 0 0 1px rgba(255, 255, 255, 0.5) inset,
         0 2px 0 #78350f,
-        0 8px 24px rgba(217, 119, 6, 0.7),
-        0 16px 40px rgba(0, 0, 0, 0.75);
+        0 8px 28px rgba(217, 119, 6, 0.72),
+        0 16px 44px rgba(0, 0, 0, 0.78);
       color: #1a0f00;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 19px;
+      font-family: 'Cinzel Decorative', 'Philosopher', 'Cinzel', 'Trajan Pro', Georgia, serif;
+      font-size: 21px;
       font-weight: 900;
-      letter-spacing: 4px;
+      letter-spacing: 5px;
       text-transform: uppercase;
       cursor: pointer;
       outline: none;
@@ -550,24 +519,18 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.45s ease;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.5s ease;
       animation: starlaBtnPulse 2.4s infinite ease-in-out;
-    }
-
-    .starla-start-btn.starla-btn-hidden {
-      display: none !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transform: scale(0.92);
+      z-index: 10;
     }
 
     .starla-start-btn:hover {
-      transform: scale(1.04) translateY(-2px);
+      transform: scale(1.05) translateY(-2px);
       box-shadow: 
-        0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+        0 0 0 1px rgba(255, 255, 255, 0.7) inset,
         0 3px 0 #78350f,
-        0 12px 30px rgba(245, 158, 11, 0.85),
-        0 20px 48px rgba(0, 0, 0, 0.85);
+        0 12px 34px rgba(245, 158, 11, 0.88),
+        0 20px 52px rgba(0, 0, 0, 0.85);
     }
 
     .starla-start-btn:active {
@@ -575,8 +538,8 @@
       box-shadow: 
         0 0 0 1px rgba(255, 255, 255, 0.3) inset,
         0 1px 0 #78350f,
-        0 4px 14px rgba(217, 119, 6, 0.5),
-        0 8px 20px rgba(0, 0, 0, 0.7);
+        0 4px 16px rgba(217, 119, 6, 0.55),
+        0 8px 24px rgba(0, 0, 0, 0.7);
     }
 
     .starla-btn-shimmer {
@@ -585,7 +548,7 @@
       left: -100%;
       width: 60%;
       height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
       transform: skewX(-25deg);
       animation: starlaShimmerSweep 3s infinite ease-in-out;
       pointer-events: none;
@@ -602,16 +565,16 @@
         box-shadow: 
           0 0 0 1px rgba(255, 255, 255, 0.5) inset,
           0 2px 0 #78350f,
-          0 8px 24px rgba(217, 119, 6, 0.7),
-          0 16px 40px rgba(0, 0, 0, 0.75);
+          0 8px 28px rgba(217, 119, 6, 0.72),
+          0 16px 44px rgba(0, 0, 0, 0.78);
       }
       50% {
-        transform: scale(1.03);
+        transform: scale(1.035);
         box-shadow: 
-          0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+          0 0 0 1px rgba(255, 255, 255, 0.68) inset,
           0 2px 0 #78350f,
-          0 12px 32px rgba(245, 158, 11, 0.92),
-          0 20px 48px rgba(0, 0, 0, 0.85);
+          0 12px 34px rgba(245, 158, 11, 0.94),
+          0 20px 50px rgba(0, 0, 0, 0.85);
       }
     }
 
@@ -694,74 +657,79 @@
       line-height: 1.4;
     }
 
-    /* 8. Background States Full Layar Sharp (border-radius: 0 !important) */
-    .slide-layer:not(.base-layer) {
-      border-radius: 0 !important;
-      transition: all 0.25s ease-out !important;
-    }
-
-    .slide-layer:not(.base-layer).starla-feedback-benar {
-      background-image: 
-        radial-gradient(circle at 50% 50%, rgba(6, 44, 24, 0.78) 0%, rgba(2, 20, 11, 0.94) 100%),
-        url('mobile/Slide6OyJsyjTUqI.jpg') !important;
-      background-size: cover !important;
-      background-position: center !important;
-      backdrop-filter: blur(14px) saturate(140%) !important;
-      -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-      border: 2px solid rgba(46, 204, 113, 0.85) !important;
-      border-radius: 0 !important;
-      box-shadow: 0 0 35px rgba(46, 204, 113, 0.6), inset 0 0 25px rgba(245, 158, 11, 0.45) !important;
-    }
-
-    .slide-layer:not(.base-layer).starla-feedback-salah {
-      background-image: 
-        radial-gradient(circle at 50% 50%, rgba(55, 12, 12, 0.8) 0%, rgba(25, 4, 4, 0.95) 100%),
-        url('mobile/Slide6OyJsyjTUqI.jpg') !important;
-      background-size: cover !important;
-      background-position: center !important;
-      backdrop-filter: blur(14px) saturate(140%) !important;
-      -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-      border: 2px solid rgba(231, 76, 60, 0.85) !important;
-      border-radius: 0 !important;
-      box-shadow: 0 0 35px rgba(231, 76, 60, 0.6), inset 0 0 25px rgba(230, 126, 34, 0.45) !important;
-    }
-
-    /* Fallback Full-Screen Backdrop for feedback layers or states without background image */
+    /* 8. Full-Screen Sharp Black Blur Backdrop on ALL States & Layers (Underneath All Images) */
+    .starla-layer-backdrop,
     #starla-state-backdrop,
     .starla-state-backdrop {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100dvh;
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
       border-radius: 0 !important;
-      background: rgba(7, 11, 20, 0.78);
-      backdrop-filter: blur(14px) saturate(135%);
-      -webkit-backdrop-filter: blur(14px) saturate(135%);
-      pointer-events: none;
-      z-index: 40;
+      background: rgba(5, 8, 17, 0.76) !important;
+      backdrop-filter: blur(14px) saturate(135%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+    }
+
+    #starla-state-backdrop {
+      z-index: 30 !important;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    #starla-state-backdrop.active,
-    .starla-state-backdrop.active {
+    #starla-state-backdrop.active {
       opacity: 1;
       visibility: visible;
     }
 
-    .layer-modal-bg {
+    .slide-layer:not(.base-layer) {
       border-radius: 0 !important;
-      background: rgba(7, 11, 20, 0.78) !important;
-      backdrop-filter: blur(14px) saturate(135%) !important;
-      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
+      background: transparent !important;
+      transition: all 0.25s ease-out !important;
+      position: absolute;
     }
 
-    .slide-layer:not(.base-layer) .vectorshape,
+    /* Stacking Context: Backdrop strictly under all images, shapes, buttons, and texts */
+    .slide-layer:not(.base-layer) > *:not(.starla-layer-backdrop) {
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    .slide-layer:not(.base-layer) img,
+    .slide-layer:not(.base-layer) svg,
+    .slide-layer:not(.base-layer) canvas,
     .slide-layer:not(.base-layer) text,
-    .slide-layer:not(.base-layer) button {
+    .slide-layer:not(.base-layer) button,
+    .slide-layer:not(.base-layer) .vectorshape {
+      position: relative !important;
+      z-index: 3 !important;
       filter: none !important;
       -webkit-font-smoothing: antialiased;
+    }
+
+    /* Feedback layer accents (Green/Red border-glow around the viewport) */
+    .slide-layer:not(.base-layer).starla-feedback-benar {
+      box-shadow: inset 0 0 35px rgba(46, 204, 113, 0.45) !important;
+      border: 2px solid rgba(46, 204, 113, 0.8) !important;
+      border-radius: 0 !important;
+    }
+
+    .slide-layer:not(.base-layer).starla-feedback-salah {
+      box-shadow: inset 0 0 35px rgba(231, 76, 60, 0.45) !important;
+      border: 2px solid rgba(231, 76, 60, 0.8) !important;
+      border-radius: 0 !important;
+    }
+
+    .layer-modal-bg {
+      border-radius: 0 !important;
+      background: rgba(5, 8, 17, 0.76) !important;
+      backdrop-filter: blur(14px) saturate(135%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(135%) !important;
     }
 
     /* 9. Top-Right Transparent Fullscreen Icon (#starla-fs-btn) */
@@ -808,103 +776,97 @@
 </head>
 <body style="background: #07090f" class="cs-HTML theme-classic">
   <!-- ========================================================================= -->
-  <!-- STARLA FRONT STAGE (Hyper-Realistic Motion Loading + 1 Start Button)      -->
+  <!-- STARLA FRONT STAGE (3D Nusantara Motion Line Art & Pure MULAI Button)     -->
   <!-- ========================================================================= -->
   <div id="starla-front-stage" class="starla-front-stage" role="region" aria-label="STARLA Budaya Front Stage">
     <div class="starla-volumetric-backdrop" aria-hidden="true"></div>
-    <div class="starla-batik-pattern" aria-hidden="true"></div>
+    <div class="starla-batik-grid" aria-hidden="true"></div>
     <div class="starla-ambient-glow" aria-hidden="true"></div>
 
     <div class="starla-stage-content">
-      <!-- Ornamen 3D-glass Gunungan & Mandala Kawung emas metalik -->
-      <div class="starla-emblem-wrap">
-        <div class="starla-specular-beam" aria-hidden="true"></div>
+      <!-- Ornamen Line Art Nusantara Motion 3D Dinamis & Profesional -->
+      <div class="starla-3d-scene" aria-hidden="true">
+        <div class="starla-3d-rig">
+          <!-- Layer 1: Outer Celestial Mandala Ring (Counter-clockwise rotation, parallax tilt) -->
+          <svg class="starla-lineart-layer layer-outer" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="200" cy="200" r="190" stroke="url(#goldGrad1)" stroke-width="1.2" stroke-dasharray="5 7" opacity="0.65"/>
+            <circle cx="200" cy="200" r="178" stroke="url(#goldGrad2)" stroke-width="1" opacity="0.45"/>
+            <g stroke="url(#goldGrad1)" stroke-width="1.2" opacity="0.55">
+              <path d="M200 10 L200 32 M200 368 L200 390 M10 200 L32 200 M368 200 L390 200"/>
+              <path d="M66 66 L82 82 M318 318 L334 334 M66 334 L82 318 M318 66 L334 82"/>
+              <path d="M127 25 L135 46 M265 354 L273 375 M25 127 L46 135 M354 265 L375 273"/>
+              <path d="M273 25 L265 46 M135 354 L127 375 M375 127 L354 135 M46 265 L25 273"/>
+            </g>
+            <g stroke="url(#goldGrad2)" stroke-width="1" opacity="0.5">
+              <polygon points="200,35 210,55 200,75 190,55" />
+              <polygon points="200,325 210,345 200,365 190,345" />
+              <polygon points="35,200 55,210 75,200 55,190" />
+              <polygon points="325,200 345,210 365,200 345,190" />
+            </g>
+          </svg>
 
-        <!-- Rotating Kawung Mandala Ring -->
-        <svg class="starla-mandala-ring" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="100" cy="100" r="92" stroke="url(#goldRingGrad)" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
-          <circle cx="100" cy="100" r="84" stroke="url(#goldRingGrad)" stroke-width="1" opacity="0.4"/>
-          <g stroke="url(#goldRingGrad)" stroke-width="1.2" opacity="0.75" fill="none">
-            <ellipse cx="100" cy="65" rx="16" ry="26"/>
-            <ellipse cx="100" cy="135" rx="16" ry="26"/>
-            <ellipse cx="65" cy="100" rx="26" ry="16"/>
-            <ellipse cx="135" cy="100" rx="26" ry="16"/>
-            <ellipse cx="75" cy="75" rx="18" ry="24" transform="rotate(45 75 75)"/>
-            <ellipse cx="125" cy="75" rx="18" ry="24" transform="rotate(-45 125 75)"/>
-            <ellipse cx="75" cy="125" rx="18" ry="24" transform="rotate(-45 75 125)"/>
-            <ellipse cx="125" cy="125" rx="18" ry="24" transform="rotate(45 125 125)"/>
-          </g>
-          <circle cx="100" cy="100" r="48" stroke="url(#goldRingGrad)" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
-          <circle cx="100" cy="8" r="3" fill="#fbbf24"/>
-          <circle cx="100" cy="192" r="3" fill="#fbbf24"/>
-          <circle cx="8" cy="100" r="3" fill="#fbbf24"/>
-          <circle cx="192" cy="100" r="3" fill="#fbbf24"/>
-          <defs>
-            <linearGradient id="goldRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#fef08a"/>
-              <stop offset="50%" stop-color="#f59e0b"/>
-              <stop offset="100%" stop-color="#b45309"/>
-            </linearGradient>
-          </defs>
-        </svg>
+          <!-- Layer 2: Mid Kawung Mandala Ring (Clockwise rotation, dynamic pitch/yaw tilt) -->
+          <svg class="starla-lineart-layer layer-mid" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="160" cy="160" r="148" stroke="url(#goldGrad1)" stroke-width="1.2" opacity="0.7"/>
+            <g stroke="url(#goldGrad1)" stroke-width="1.2" opacity="0.8">
+              <ellipse cx="160" cy="110" rx="24" ry="42"/>
+              <ellipse cx="160" cy="210" rx="24" ry="42"/>
+              <ellipse cx="110" cy="160" rx="42" ry="24"/>
+              <ellipse cx="210" cy="160" rx="42" ry="24"/>
+              <ellipse cx="125" cy="125" rx="26" ry="38" transform="rotate(45 125 125)"/>
+              <ellipse cx="195" cy="125" rx="26" ry="38" transform="rotate(-45 195 125)"/>
+              <ellipse cx="125" cy="195" rx="26" ry="38" transform="rotate(-45 125 195)"/>
+              <ellipse cx="195" cy="195" rx="26" ry="38" transform="rotate(45 195 195)"/>
+            </g>
+            <polygon points="160,82 178,142 238,160 178,178 160,238 142,178 82,160 142,142" stroke="url(#goldGrad2)" stroke-width="1.2" opacity="0.85"/>
+            <polygon points="160,98 172,148 222,160 172,172 160,222 148,172 98,160 148,148" stroke="url(#goldGrad1)" stroke-width="1" opacity="0.6"/>
+          </svg>
 
-        <!-- Center Golden Gunungan Silhouette with 3D Specular Shimmer Core -->
-        <svg class="starla-gunungan-center" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="gununganGold" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stop-color="#fffbeb"/>
-              <stop offset="18%" stop-color="#fde68a"/>
-              <stop offset="55%" stop-color="#f59e0b"/>
-              <stop offset="85%" stop-color="#d97706"/>
-              <stop offset="100%" stop-color="#78350f"/>
-            </linearGradient>
-            <linearGradient id="gununganShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
-              <stop offset="50%" stop-color="rgba(251,191,36,0.3)"/>
-              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-            </linearGradient>
-          </defs>
-          <path d="M60 4 C54 18 42 32 36 44 C30 55 22 66 16 80 C11 92 12 104 18 114 C24 124 36 130 60 134 C84 130 96 124 102 114 C108 104 109 92 104 80 C98 66 90 55 84 44 C78 32 66 18 60 4 Z"
-                fill="url(#gununganGold)" opacity="0.95"/>
-          <path d="M60 4 C54 18 42 32 36 44 C30 55 22 66 16 80 C11 92 12 104 18 114 C24 124 36 130 60 134 Z"
-                fill="url(#gununganShimmer)" opacity="0.45"/>
-          <path d="M60 18 L60 126 M44 58 C52 52 68 52 76 58 M36 78 C48 70 72 70 84 78 M32 98 C46 90 74 90 88 98 M26 116 C44 108 76 108 94 116"
-                stroke="#07090f" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-          <circle cx="60" cy="38" r="4.5" fill="#07090f" opacity="0.9"/>
-          <polygon points="60,8 63,16 60,20 57,16" fill="#ffffff"/>
-        </svg>
+          <!-- Layer 3: Inner Sacred Geometry / Nusantara Core (Counter-rotation, parallax depth) -->
+          <svg class="starla-lineart-layer layer-inner" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="88" stroke="url(#goldGrad1)" stroke-width="1.4" stroke-dasharray="3 4" opacity="0.85"/>
+            <circle cx="100" cy="100" r="70" stroke="url(#goldGrad2)" stroke-width="1.2" opacity="0.75"/>
+            <circle cx="100" cy="100" r="50" stroke="url(#goldGrad1)" stroke-width="1" opacity="0.9"/>
+            <circle cx="100" cy="100" r="12" stroke="url(#goldGrad1)" stroke-width="1.5" opacity="0.95"/>
+            <polygon points="100,56 109,91 144,100 109,109 100,144 91,109 56,100 91,91" stroke="url(#goldGrad2)" stroke-width="1.2" opacity="0.9"/>
+            <circle cx="100" cy="100" r="4" fill="#fbbf24"/>
+            <circle cx="100" cy="14" r="2.5" fill="#fef08a"/>
+            <circle cx="100" cy="186" r="2.5" fill="#fef08a"/>
+            <circle cx="14" cy="100" r="2.5" fill="#fef08a"/>
+            <circle cx="186" cy="100" r="2.5" fill="#fef08a"/>
+            <circle cx="39" cy="39" r="2" fill="#fbbf24"/>
+            <circle cx="161" cy="39" r="2" fill="#fbbf24"/>
+            <circle cx="39" cy="161" r="2" fill="#fbbf24"/>
+            <circle cx="161" cy="161" r="2" fill="#fbbf24"/>
+          </svg>
 
-        <!-- Ambient Golden Particles -->
-        <div class="starla-particle p1"></div>
-        <div class="starla-particle p2"></div>
-        <div class="starla-particle p3"></div>
-        <div class="starla-particle p4"></div>
-      </div>
+          <!-- SVG Gradient definitions -->
+          <svg width="0" height="0" style="position:absolute; width:0; height:0;">
+            <defs>
+              <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="45%" stop-color="#fbbf24"/>
+                <stop offset="80%" stop-color="#d97706"/>
+                <stop offset="100%" stop-color="#92400e"/>
+              </linearGradient>
+              <linearGradient id="goldGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#fffbeb"/>
+                <stop offset="35%" stop-color="#fbbf24"/>
+                <stop offset="75%" stop-color="#b45309"/>
+                <stop offset="100%" stop-color="#78350f"/>
+              </linearGradient>
+            </defs>
+          </svg>
 
-      <!-- Title & Subtitle -->
-      <div class="starla-brand-group">
-        <h1 class="starla-title">STARLA BUDAYA</h1>
-        <div class="starla-tagline">Petualangan Interaktif Warisan Budaya Indonesia</div>
-      </div>
-
-      <!-- Pemuatan Progres (Real Asset & Engine Readiness Progress 0% - 100%) -->
-      <div id="starla-progress-box" class="starla-progress-box">
-        <div class="starla-progress-track">
-          <div id="starla-progress-fill" class="starla-progress-fill"></div>
-        </div>
-        <div class="starla-progress-info">
-          <span id="starla-status-text" class="starla-status-text">Menyiapkan Petualangan Nusantara...</span>
-          <span id="starla-percent-text" class="starla-percent-text">0%</span>
+          <!-- 3D Light Shimmer Core -->
+          <div class="starla-3d-shimmer" aria-hidden="true"></div>
         </div>
       </div>
 
-      <!-- 1 Tombol Mulai (Tactile Glass-Gold Bevel Button) -->
-      <button id="starla-start-btn" class="starla-start-btn starla-btn-hidden" type="button" aria-label="Mulai Petualangan">
+      <!-- 1 Tombol Mulai (Pure Typography Nusantara, Tanpa Ikon) -->
+      <button id="starla-start-btn" class="starla-start-btn" type="button" aria-label="Mulai">
         <span class="starla-btn-shimmer" aria-hidden="true"></span>
         <span class="starla-btn-text">MULAI</span>
-        <svg class="starla-btn-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/>
-        </svg>
       </button>
     </div>
   </div>
@@ -938,28 +900,49 @@
   <!-- Fallback Full-Screen Backdrop for feedback layers or states -->
   <div id="starla-state-backdrop" class="starla-state-backdrop" aria-hidden="true"></div>
 
-  <!-- STARLA Budaya - Front Stage Motion Loading & Single Start Button Controller -->
+  <!-- STARLA Budaya - Front Stage 3D Nusantara Motion & Mulai Controller -->
   <script>
     (function() {
       'use strict';
-      var startTime = Date.now();
       var stageEl = document.getElementById('starla-front-stage');
-      var progressBox = document.getElementById('starla-progress-box');
-      var fillEl = document.getElementById('starla-progress-fill');
-      var statusEl = document.getElementById('starla-status-text');
-      var percentEl = document.getElementById('starla-percent-text');
       var startBtn = document.getElementById('starla-start-btn');
-      var isReady = false;
       var isStarted = false;
-      var currentProgress = 0;
 
-      // Status messages
-      var statusMessages = [
-        { at: 0, text: 'Menyiapkan Petualangan Nusantara...' },
-        { at: 35, text: 'Memuat Media Interaktif...' },
-        { at: 70, text: 'Mengaktifkan Eksplorasi Murid...' },
-        { at: 98, text: 'Siap Dimainkan!' }
-      ];
+      // Safe HTMLMediaElement.prototype.play wrapper: prevents freezing at frame 00:00
+      var originalPlay = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function() {
+        var self = this;
+        if (window.__starlaUserInteracted) {
+          self.setAttribute('playsinline', '');
+          self.setAttribute('webkit-playsinline', '');
+        }
+        var res = originalPlay.apply(self, arguments);
+        if (res && typeof res.catch === 'function') {
+          return res.catch(function(err) {
+            if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+              console.warn('[StarlaBudaya] Autoplay audio blocked, fallback to muted play:', err);
+              self.muted = true;
+              var retry = originalPlay.apply(self, arguments);
+              if (retry && typeof retry.catch === 'function') retry.catch(function(){});
+              var unmuteOnNextTap = function() {
+                try {
+                  self.muted = false;
+                  self.volume = 1;
+                } catch(e){}
+                document.removeEventListener('pointerdown', unmuteOnNextTap, true);
+                document.removeEventListener('touchstart', unmuteOnNextTap, true);
+                document.removeEventListener('click', unmuteOnNextTap, true);
+              };
+              document.addEventListener('pointerdown', unmuteOnNextTap, true);
+              document.addEventListener('touchstart', unmuteOnNextTap, true);
+              document.addEventListener('click', unmuteOnNextTap, true);
+              return retry;
+            }
+            throw err;
+          });
+        }
+        return res;
+      };
 
       // Warm critical assets in background
       var warmAssets = [
@@ -967,7 +950,6 @@
         'mobile/Slide6OyJsyjTUqI.jpg',
         'story_content/6DeuLJzk41Q_44100_56_0.mp3'
       ];
-
       warmAssets.forEach(function(url) {
         try {
           if (/\.jpg$|\.png$/.test(url)) {
@@ -981,72 +963,13 @@
         } catch(e){}
       });
 
-      function updateProgress(val) {
-        if (val > currentProgress) currentProgress = val;
-        if (currentProgress > 100) currentProgress = 100;
-
-        if (fillEl) fillEl.style.width = currentProgress + '%';
-        if (percentEl) percentEl.textContent = Math.round(currentProgress) + '%';
-
-        if (statusEl) {
-          for (var i = statusMessages.length - 1; i >= 0; i--) {
-            if (currentProgress >= statusMessages[i].at) {
-              statusEl.textContent = statusMessages[i].text;
-              break;
-            }
-          }
-        }
-      }
-
-      function isStorylineReady() {
-        var preso = document.getElementById('preso');
-        var presoReady = preso && (preso.offsetWidth > 0 || preso.offsetHeight > 0);
-        var slideContainer = document.querySelector('.slide-container, .slide-window, .primary-slide');
-        var playerReady = Boolean(window.DS && (window.DS.windowManager || window.DS.pubSub || window.globals));
-        return (presoReady || slideContainer) && playerReady;
-      }
-
-      function showStartButton() {
-        if (isReady) return;
-        isReady = true;
-        updateProgress(100);
-
-        setTimeout(function() {
-          if (progressBox) {
-            progressBox.classList.add('starla-box-hidden');
-          }
-          if (startBtn) {
-            startBtn.classList.remove('starla-btn-hidden');
-          }
-        }, 220);
-      }
-
-      var timer = setInterval(function() {
-        var elapsed = Date.now() - startTime;
-        var ready = isStorylineReady();
-
-        if (elapsed < 600) {
-          updateProgress((elapsed / 600) * 45);
-        } else if (elapsed < 1200) {
-          updateProgress(45 + ((elapsed - 600) / 600) * 45);
-        } else {
-          if (ready || elapsed >= 2400) {
-            updateProgress(100);
-            clearInterval(timer);
-            showStartButton();
-          } else {
-            updateProgress(94);
-          }
-        }
-      }, 50);
-
-      // Handle Start Button click (Trusted User Gesture)
-      function handleStartAction() {
+      // Synchronous start execution on user tap
+      function handleStartAction(e) {
         if (isStarted) return;
         isStarted = true;
         window.__starlaUserInteracted = true;
 
-        // 1. AudioContext unlock
+        // a. Synchronous AudioContext unlock
         try {
           var AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (!window.__storyAudioCtx && AudioCtx) {
@@ -1061,9 +984,9 @@
               window.DS.audioContext.ctx.resume();
             }
           }
-        } catch(e){}
+        } catch(err){}
 
-        // 2. Play all video and audio unmuted
+        // b. Trigger internal Storyline start buttons and unmuted playback
         var mediaEls = document.querySelectorAll('video, audio');
         mediaEls.forEach(function(el) {
           try {
@@ -1073,19 +996,18 @@
             el.setAttribute('webkit-playsinline', '');
             var p = el.play();
             if (p && typeof p.catch === 'function') p.catch(function(){});
-          } catch(e){}
+          } catch(err){}
         });
 
-        // 3. Trigger native Storyline start buttons
         var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
         startBtns.forEach(function(b) {
-          try { b.click(); } catch(e){}
+          try { b.click(); } catch(err){}
         });
         if (window.DS && window.DS.renderEngine && typeof window.DS.renderEngine.killPlayerPropertiesImagePreview === 'function') {
-          try { window.DS.renderEngine.killPlayerPropertiesImagePreview(); } catch(e){}
+          try { window.DS.renderEngine.killPlayerPropertiesImagePreview(); } catch(err){}
         }
 
-        // 4. Mobile touch fullscreen & landscape lock
+        // Mobile touch fullscreen & auto-rotate landscape lock
         var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
         if (isTouch) {
           var docEl = document.documentElement;
@@ -1095,30 +1017,38 @@
             if (pr && pr.catch) pr.catch(function(){});
           }
           if (screen.orientation && typeof screen.orientation.lock === 'function') {
-            try { screen.orientation.lock('landscape').catch(function(){}); } catch(e){}
+            try {
+              screen.orientation.lock('landscape').catch(function(){});
+            } catch(err){}
           }
         }
 
-        // 5. Fade out #starla-front-stage cinematically
+        // d. Smooth cinematic fade out for #starla-front-stage
         if (stageEl) {
           stageEl.style.opacity = '0';
+          stageEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
           stageEl.style.transform = 'scale(1.02)';
           setTimeout(function() {
             stageEl.style.display = 'none';
-          }, 550);
+          }, 500);
         }
 
-        // 6. Show fullscreen button in top right corner
+        // Show fullscreen icon at top-right
         var fsBtn = document.getElementById('starla-fs-btn');
         if (fsBtn) {
           fsBtn.classList.add('visible');
         }
 
-        // 7. Dispatch resize event
-        window.dispatchEvent(new Event('resize'));
+        // Cascaded auto-scale resize triggers (0ms, 100ms, 300ms, 700ms)
+        [0, 100, 300, 700].forEach(function(delay) {
+          setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+          }, delay);
+        });
       }
 
       if (startBtn) {
+        startBtn.addEventListener('pointerdown', handleStartAction);
         startBtn.addEventListener('click', handleStartAction);
         startBtn.addEventListener('touchend', handleStartAction);
       }
@@ -1129,7 +1059,7 @@
     /**
      * STARLA Budaya - Core Game Architecture
      * Orchestrates fullscreen handling, orientation alerts, in-memory active session tracking,
-     * auto-certificate routing, full-screen sharp feedback backdrops, and video autoplay.
+     * auto-certificate routing, full-screen sharp feedback backdrops on all states, and video autoplay.
      */
     window.StarlaBudaya = (function() {
       'use strict';
@@ -1336,7 +1266,7 @@
         }
       }
 
-      // Apply Full Screen Sharp Feedback Layers and State Backdrop
+      // FASE 4: Apply Full Screen Sharp Under-Image Backdrop on ALL States & Layers
       function processFeedbackLayers() {
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
         var hasVisibleLayer = false;
@@ -1344,6 +1274,14 @@
         layers.forEach(function(layer) {
           var isVisible = layer.offsetWidth > 0 || layer.offsetHeight > 0 || window.getComputedStyle(layer).display !== 'none';
           if (isVisible) hasVisibleLayer = true;
+
+          // Prepend under-image black blur backdrop if not already inserted
+          if (!layer.querySelector('.starla-layer-backdrop')) {
+            var backdrop = document.createElement('div');
+            backdrop.className = 'starla-layer-backdrop';
+            backdrop.setAttribute('aria-hidden', 'true');
+            layer.insertBefore(backdrop, layer.firstChild);
+          }
 
           var layerHtml = layer.innerHTML || '';
           var layerModelId = layer.getAttribute('data-model-id') || '';
@@ -1382,12 +1320,13 @@
         }
       }
 
-      // Safe image error handler to prevent broken image icons
+      // Safe image error handler to prevent broken image icons on top of backdrop
       function setupImageFallbacks() {
         document.addEventListener('error', function(e) {
           if (e.target && e.target.tagName === 'IMG') {
             e.target.style.opacity = '0';
             e.target.style.visibility = 'hidden';
+            e.target.style.display = 'none';
           }
         }, true);
       }
@@ -1454,10 +1393,27 @@
         document.addEventListener('touchend', handleInterception, true);
       }
 
+      // FASE 1: Lightweight DOM Guardian to sanitize text nodes and hide mobile titles
+      function sanitizeTextNodes(root) {
+        try {
+          var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, null, false);
+          var node;
+          while ((node = walker.nextNode())) {
+            if (node.nodeValue && new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'i').test(node.nodeValue)) {
+              node.nodeValue = node.nodeValue.replace(new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'gi'), 'STARLA BUDAYA');
+              if (node.parentElement && /mobile-start|mobile-load/i.test(node.parentElement.className + ' ' + (node.parentElement.id || ''))) {
+                node.parentElement.style.display = 'none';
+              }
+            }
+          }
+        } catch(e){}
+      }
+
       // Main Cycle Monitor
       function runCycle() {
         bypassNativeModals();
         processFeedbackLayers();
+        sanitizeTextNodes(document.body);
         if (window.__starlaUserInteracted) {
           attemptVideoAutoplay();
         }
@@ -1528,9 +1484,27 @@
         }
 
         window.addEventListener('resize', updateOrientationAlert);
-        window.addEventListener('orientationchange', updateOrientationAlert);
+        window.addEventListener('orientationchange', function() {
+          setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+            updateOrientationAlert();
+          }, 100);
+        });
         if (window.screen && window.screen.orientation) {
-          try { window.screen.orientation.addEventListener('change', updateOrientationAlert); } catch(e){}
+          try {
+            window.screen.orientation.addEventListener('change', function() {
+              setTimeout(function() {
+                window.dispatchEvent(new Event('resize'));
+                updateOrientationAlert();
+              }, 100);
+            });
+          } catch(e){}
+        }
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', function() {
+            window.dispatchEvent(new Event('resize'));
+            updateOrientationAlert();
+          });
         }
         updateOrientationAlert();
         updateFullscreenIcon();
@@ -1543,11 +1517,12 @@
         var observer = new MutationObserver(function() {
           bypassNativeModals();
           processFeedbackLayers();
+          sanitizeTextNodes(document.body);
           if (window.__starlaUserInteracted) {
             attemptVideoAutoplay();
           }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
         setInterval(runCycle, 250);
         runCycle();
@@ -1630,7 +1605,7 @@
   </script>
 
   <div class="mobile-load-title-overlay" style="display: none">
-    <div class="mobile-load-title">STARLA BUDAYA GO</div>
+    <div class="mobile-load-title">STARLA BUDAYA</div>
   </div>
 
   <div class="mobile-chrome-warning"></div>
