@@ -2,38 +2,35 @@
 <html lang="id-ID">
 <head>
   <meta charset="utf-8">
-  <!-- Prototype Hook for Autoplay Video Intro & Anti-Zoom Static Lock & Storage Reset -->
+  <!-- StarlaEngine: Early Bootstrap, Storage Reset, Gated Video Hook & Anti-Zoom Lock -->
   <script>
     (function() {
-      // 1. Pembersihan Storage Resume Storyline Sebelum Boot (Safe try-catch)
-      window.__starlaWipeResumeStorage = function() {
+      'use strict';
+
+      // 1. Storage wipe on initial load & beforeunload (Phase 4 point 2)
+      function wipeResumeStorage() {
         try {
           if (typeof window !== 'undefined') {
-            if (window.localStorage) {
-              window.localStorage.clear();
-            }
-            if (window.sessionStorage) {
-              window.sessionStorage.clear();
-            }
+            if (window.localStorage) window.localStorage.clear();
+            if (window.sessionStorage) window.sessionStorage.clear();
           }
         } catch(e){}
-      };
-      window.__starlaWipeResumeStorage();
+      }
+      window.__starlaWipeResumeStorage = wipeResumeStorage;
+      wipeResumeStorage();
 
       window.addEventListener('beforeunload', function() {
-        try {
-          window.__starlaWipeResumeStorage();
-        } catch(e){}
+        try { wipeResumeStorage(); } catch(e){}
       });
 
-      // Back-Forward Cache (bfcache) auto-reload agar halaman selalu segar saat Back/Reopen
+      // bfcache reload guard (Phase 4 point 2)
       window.addEventListener('pageshow', function(e) {
         if (e.persisted) {
           window.location.reload();
         }
       });
 
-      // Bersihkan Service Worker lama jika ada
+      // Service Worker cleanup
       if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
         try {
           navigator.serviceWorker.getRegistrations().then(function(regs) {
@@ -42,11 +39,14 @@
         } catch(e){}
       }
 
-      // 2. Prototype hook for HTMLMediaElement.prototype.play & Video Gating
-      window.__starlaAllowVideo5gKz = false;
+      // 2. Video Gating: Initialize window.__starlaVideo5gKzUnlocked = false (Phase 2 point 1)
+      window.__starlaVideo5gKzUnlocked = false;
+      window.__starlaAllowVideo5gKz = false; // alias for backwards compatibility
       window.__starlaUserInteracted = false;
+      window.__starlaFrontOpened = false;
 
-      window.__starlaIsVideo5gKz = function(el) {
+      // Detection helper for video_5gKzK4lbTf6_22_56_1280x720 (Phase 2 point 1)
+      function isVideo5gKz(el) {
         if (!el) return false;
         try {
           var s = (el.currentSrc || el.src || '').toLowerCase();
@@ -60,46 +60,73 @@
           }
         } catch(e) {}
         return false;
-      };
+      }
+      window.__starlaIsVideo5gKz = isVideo5gKz;
 
-      var origPlay = HTMLMediaElement.prototype.play;
+      // Single Prototype Hook for HTMLMediaElement.prototype.play (Phase 2 point 1)
+      var origMediaPlay = HTMLMediaElement.prototype.play;
       HTMLMediaElement.prototype.play = function() {
-        var isVideo = (this instanceof HTMLVideoElement || (this.tagName && this.tagName.toUpperCase() === 'VIDEO'));
+        var self = this;
+        var isVideo = (self instanceof HTMLVideoElement || (self.tagName && self.tagName.toUpperCase() === 'VIDEO'));
+
         if (isVideo) {
-          // Gating FASE 4: cegah pemutaran video_5gKzK4lbTf6 sebelum tombol 6VpxF5tzDfS ditekan!
-          if (window.__starlaIsVideo5gKz(this) && window.__starlaAllowVideo5gKz !== true) {
-            this.autoplay = false;
-            this.removeAttribute('autoplay');
-            try { this.pause(); } catch(e){}
+          // Gating: If video is video_5gKzK4lbTf6 and not unlocked, prevent early autoplay
+          if (isVideo5gKz(self) && !window.__starlaVideo5gKzUnlocked) {
+            self.autoplay = false;
+            self.removeAttribute('autoplay');
+            try { self.pause(); } catch(e){}
             return Promise.resolve();
           }
 
           if (!window.__starlaUserInteracted) {
-            this.muted = true;
-            this.playsInline = true;
-            this.setAttribute('playsinline', '');
-            this.setAttribute('webkit-playsinline', '');
+            self.muted = true;
+            self.playsInline = true;
+            self.setAttribute('playsinline', '');
+            self.setAttribute('webkit-playsinline', '');
           }
         }
-        return origPlay.apply(this, arguments);
+
+        var res = origMediaPlay.apply(self, arguments);
+        if (res && typeof res.catch === 'function') {
+          return res.catch(function(err) {
+            if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+              self.muted = true;
+              var retry = origMediaPlay.apply(self, arguments);
+              if (retry && typeof retry.catch === 'function') retry.catch(function(){});
+
+              var unmuteOnNextTouch = function() {
+                try {
+                  self.muted = false;
+                  self.volume = 1;
+                } catch(e){}
+                ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
+                  document.removeEventListener(evt, unmuteOnNextTouch, true);
+                });
+              };
+              ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
+                document.addEventListener(evt, unmuteOnNextTouch, true);
+              });
+              return retry;
+            }
+            throw err;
+          });
+        }
+        return res;
       };
 
       // 3. Strict Screen Locking (Anti-Zoom)
-      // Prevent multi-touch pinch zoom
       document.addEventListener('touchmove', function(e) {
         if (e.touches && e.touches.length > 1) {
           e.preventDefault();
         }
       }, { passive: false });
 
-      // Prevent Safari gesture zoom
       ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(evt) {
         document.addEventListener(evt, function(e) {
           e.preventDefault();
         }, { passive: false });
       });
 
-      // Prevent double tap zoom (Safe: never blocks buttons, slide objects or interactive elements)
       var lastTouchEnd = 0;
       document.addEventListener('touchend', function(e) {
         var now = Date.now();
@@ -115,21 +142,18 @@
         lastTouchEnd = now;
       }, { passive: false });
 
-      // Prevent dblclick zoom
       document.addEventListener('dblclick', function(e) {
         if (!e.target || (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
           e.preventDefault();
         }
       }, { passive: false });
 
-      // Prevent Ctrl/Cmd + Wheel zoom
       window.addEventListener('wheel', function(e) {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
         }
       }, { passive: false });
 
-      // Prevent Ctrl/Cmd + (+, -, 0, =) keyboard zoom
       window.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && (
           e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0' ||
@@ -140,27 +164,6 @@
         }
       }, false);
     })();
-
-    // Resize events on load & triggers
-    window.addEventListener('resize', function() {
-      if (window.StarlaBudaya && typeof window.StarlaBudaya.updateOrientationAlert === 'function') {
-        window.StarlaBudaya.updateOrientationAlert();
-      }
-    });
-    window.addEventListener('orientationchange', function() {
-      setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
-    });
-    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
-      document.addEventListener(evt, function() {
-        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
-      });
-    });
-
-    [50, 150, 300, 500, 800, 1200, 1600, 2000, 2500].forEach(function(delay) {
-      setTimeout(function() {
-        window.dispatchEvent(new Event('resize'));
-      }, delay);
-    });
   </script>
   <!-- Created using Storyline 3 - http://www.articulate.com  -->
   <!-- version: 3.20.30234.0 -->
@@ -182,8 +185,9 @@
       width: 100vw;
       height: 100dvh;
       overflow: hidden;
-      background: #07090f;
-      touch-action: none;
+      background: #060913;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
       overscroll-behavior: none;
       -webkit-text-size-adjust: 100%;
       user-select: none;
@@ -199,7 +203,7 @@
       height: 100dvh;
       margin: 0;
       padding: 0;
-      background: #07090f;
+      background: #060913;
     }
   </style>
 
@@ -270,7 +274,8 @@
       height: 100dvh;
       overflow: hidden;
       background: #060913;
-      touch-action: none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
       overscroll-behavior: none;
       -webkit-text-size-adjust: 100%;
       user-select: none;
@@ -561,21 +566,27 @@
       position: absolute !important;
     }
 
-    /* Modal Backdrop */
+    /* Modal Backdrop (Phase 1 point 3: Exact Screen Dimensions & Balanced Blur) */
     .starla-state-backdrop,
     .starla-layer-backdrop,
     .layer-modal-bg {
-      position: absolute !important;
-      top: -50vh !important;
-      left: -50vw !important;
-      width: 200vw !important;
-      height: 200vh !important;
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
       z-index: 1 !important;
       border-radius: 0 !important;
       pointer-events: none !important;
-      background: rgba(5, 8, 17, 0.72) !important;
-      backdrop-filter: blur(12px) saturate(130%) !important;
-      -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+      background: rgba(5, 8, 17, 0.78) !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
+    }
+
+    .slide-layer.hidden .starla-state-backdrop,
+    .slide-layer.hidden .starla-layer-backdrop,
+    .slide-layer.hidden .layer-modal-bg,
+    .slide-layer:not(.shown) .starla-state-backdrop {
+      display: none !important;
     }
 
     /* Background SVGs (SlideBackground) strictly at bottom */
@@ -691,35 +702,26 @@
       cursor: pointer !important;
     }
 
-    /* Close buttons for top aligned modals (placed directly on top of the images at z-index 30) */
+    /* Close buttons for top aligned modals & quiz continue buttons (z-index: 30) */
     [data-model-id="5Zr3famKnLd"],
     [data-model-id="5ZMtYjS7oxd"],
-    [data-model-id="5tBmZlAoMEi"] {
+    [data-model-id="5tBmZlAoMEi"],
+    [data-model-id="67BmTMfY8zv"],
+    [data-model-id="5vw6iEJUiYN"],
+    img[src*="lanjut"],
+    [data-acc-text*="lanjut" i] {
       z-index: 30 !important;
       pointer-events: auto !important;
       cursor: pointer !important;
     }
 
-    /* Feedback quiz lanjut buttons */
-    [data-model-id="67BmTMfY8zv"],
-    [data-model-id="5vw6iEJUiYN"],
-    img[src*="lanjut"],
-    [data-acc-text*="lanjut" i] {
-      z-index: 25 !important;
-      pointer-events: auto !important;
-      cursor: pointer !important;
-    }
-
-    /* ALL Close buttons in states and layers: Topmost layer z-index 100, always clickable */
+    /* ALL other Close buttons in states and layers: Topmost layer z-index 100, always clickable */
     [data-acc-text*="7409592"],
     img[src*="6ljF2bhskoS"],
     [data-model-id="5Z3CAwZT8J0"],
     [data-model-id="60OqR1FSbfo"],
     [data-model-id="6niCawvLG1a"],
     [data-model-id="5dFWkaH35V0"],
-    [data-model-id="5ZMtYjS7oxd"],
-    [data-model-id="5tBmZlAoMEi"],
-    [data-model-id="5Zr3famKnLd"],
     [data-acc-text*="close" i],
     [data-acc-text*="tutup" i],
     [data-acc-text*="silang" i] {
@@ -797,15 +799,59 @@
     </div>
   </div>
 
-  <!-- STARLA Budaya - Front Stage Amber Fingerprint, Tap Anywhere & Audio Controller -->
+  <!-- ========================================================================= -->
+  <!-- STARLA ENGINE: Unified Production Architecture (Ultra-fast, Anti-lag, 60fps) -->
+  <!-- ========================================================================= -->
   <script>
     (function() {
       'use strict';
-      window.__starlaFrontOpened = false;
+
+      // -------------------------------------------------------------------------
+      // Constants & Configuration
+      // -------------------------------------------------------------------------
+      var SLIDE_SCENE_PREFIX = '_player.5sAEMI5psmg.';
+
+      var SLIDES = {
+        INTRO: '6AR4SV4ZYat',
+        LOGIN: '5ml7jyaiXGc',
+        WELCOME: '5dLAzY4SKGI',
+        MENU_MATERI: '5iew2M44w24',
+        MENU_UTAMA: '6eHtnAfM3bY',
+        KUIS_START: '6oOWqUyP2WL',
+        KUIS_CERT: '6ddgVMlBGEg',
+        GAME_START: '6G1VrKuOhCw',
+        GAME_CERT: '6WIqLhHr1Cm'
+      };
+
+      var FEEDBACK_LAYERS = {
+        BENAR: [
+          '5wLllNjELzq', '5dINY7oQloY', '6ozsIxVZ0Ap', '6IjgPGebEz0', '6QkcRhah4eX',
+          '6rbLNT1TBry', '61rhLpSYjLN', '5lnjz9IXetF', '6R7oc9XCNf5', '6O0xCHrwpAI'
+        ],
+        SALAH: [
+          '6BvBZyuy25S', '6YjsJKEnG88', '6RqFMmFCoCW', '6AIJEmDTCL3', '5aP1qzv44A6',
+          '61Bo7wMMSKu', '6NOS9sRsO3U', '5dPQ9dmNB1n', '6AYOrp7ei5M', '6ULkx4Aw2EM'
+        ]
+      };
+
+      window.__starlaActiveRun = {
+        accountKey: '',
+        nama: '',
+        sekolah: '',
+        kuisCompleted: false,
+        gameCompleted: false,
+        poin: 0,
+        score: 0
+      };
+
+      var lastKnownSlideId = null;
       var stageEl = document.getElementById('starla-front-stage');
       var isStarted = false;
+      var lastInteractionTime = 0;
 
-      // Pure Web Audio API: Nusantara Ambient Pad & Interactive Chimes (0 external files)
+      // -------------------------------------------------------------------------
+      // Module 1: Web Audio Subsystem (Pure Web Audio API, Nusantara Ambient)
+      // -------------------------------------------------------------------------
       var StarlaAudio = (function() {
         var ctx = null;
         var masterGain = null;
@@ -813,6 +859,7 @@
         var isAmbientRunning = false;
         var ambientTimer = null;
         var padOscs = [];
+        var slendroFreqs = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
 
         function getContext() {
           if (!ctx) {
@@ -833,8 +880,6 @@
           }
           return ctx;
         }
-
-        var slendroFreqs = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
 
         function startAmbient() {
           if (isAmbientRunning) return;
@@ -912,9 +957,7 @@
             }
 
             scheduleNextChime();
-          } catch(e) {
-            console.warn('[StarlaAudio] Ambient notice:', e);
-          }
+          } catch(e) {}
         }
 
         function fadeOutAmbient(duration) {
@@ -968,49 +1011,45 @@
         };
       })();
 
-      // User interaction listener to start ambient sound gracefully
-      var gestureEvents = ['pointerdown', 'pointermove', 'touchstart', 'keydown'];
-      function onInitialGesture() {
+      // Start ambient on initial gestures gracefully
+      var gestureEvents = ['pointerdown', 'touchstart', 'keydown'];
+      function onInitialAudioGesture() {
         var audio = StarlaAudio.getContext();
         if (audio && audio.state === 'suspended') {
           audio.resume().catch(function(){});
         }
         StarlaAudio.startAmbient();
         gestureEvents.forEach(function(evt) {
-          window.removeEventListener(evt, onInitialGesture, { passive: true });
-          if (stageEl) stageEl.removeEventListener(evt, onInitialGesture, { passive: true });
+          window.removeEventListener(evt, onInitialAudioGesture, { passive: true });
         });
       }
       gestureEvents.forEach(function(evt) {
-        window.addEventListener(evt, onInitialGesture, { passive: true, once: true });
-        if (stageEl) stageEl.addEventListener(evt, onInitialGesture, { passive: true, once: true });
-      });
-      document.addEventListener('DOMContentLoaded', function() {
-        try { StarlaAudio.startAmbient(); } catch(e){}
-      });
-      window.addEventListener('load', function() {
-        try { StarlaAudio.startAmbient(); } catch(e){}
+        window.addEventListener(evt, onInitialAudioGesture, { passive: true, once: true });
       });
       try { StarlaAudio.startAmbient(); } catch(e){}
 
-      // Mobile Video Autoplay Guard helper
+      // -------------------------------------------------------------------------
+      // Module 2: Video Playback & Gating Subsystem (FASE 2)
+      // -------------------------------------------------------------------------
       function enforceVideoPlay(video) {
         if (!video) return;
-        if (window.__starlaIsVideo5gKz && window.__starlaIsVideo5gKz(video) && window.__starlaAllowVideo5gKz !== true) {
+        if (window.__starlaIsVideo5gKz(video) && !window.__starlaVideo5gKzUnlocked) {
           video.autoplay = false;
           video.removeAttribute('autoplay');
           try { video.pause(); } catch(e){}
           return;
         }
+
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.playsInline = true;
+        video.preload = 'auto';
         video.muted = false;
         video.volume = 1;
 
         var playPromise = video.play();
         if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(function(err) {
+          playPromise.catch(function() {
             setTimeout(function() {
               try {
                 video.muted = true;
@@ -1035,52 +1074,169 @@
         }
       }
 
-      // Safe HTMLMediaElement.prototype.play wrapper
-      var originalPlay = HTMLMediaElement.prototype.play;
-      HTMLMediaElement.prototype.play = function() {
-        var self = this;
-        var isVideo = (self instanceof HTMLVideoElement || (self.tagName && self.tagName.toUpperCase() === 'VIDEO'));
-        if (isVideo && window.__starlaIsVideo5gKz && window.__starlaIsVideo5gKz(self) && window.__starlaAllowVideo5gKz !== true) {
-          self.autoplay = false;
-          self.removeAttribute('autoplay');
-          try { self.pause(); } catch(e){}
-          return Promise.resolve();
+      function playIntroVideos() {
+        var vids = document.querySelectorAll('video');
+        for (var i = 0; i < vids.length; i++) {
+          var v = vids[i];
+          if (window.__starlaIsVideo5gKz(v) && !window.__starlaVideo5gKzUnlocked) continue;
+          if (v.paused || v.currentTime < 0.1) {
+            enforceVideoPlay(v);
+          }
         }
-        if (window.__starlaUserInteracted) {
-          self.setAttribute('playsinline', '');
-          self.setAttribute('webkit-playsinline', '');
-        }
-        var res = originalPlay.apply(self, arguments);
-        if (res && typeof res.catch === 'function') {
-          return res.catch(function(err) {
-            if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
-              console.warn('[StarlaBudaya] Autoplay sound blocked, fallback to muted play:', err);
-              self.muted = true;
-              var retry = originalPlay.apply(self, arguments);
-              if (retry && typeof retry.catch === 'function') retry.catch(function(){});
-              var unmuteOnNextTap = function() {
-                try {
-                  self.muted = false;
-                  self.volume = 1;
-                } catch(e){}
-                ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                  document.removeEventListener(evt, unmuteOnNextTap, true);
-                });
-              };
-              ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                document.addEventListener(evt, unmuteOnNextTap, true);
-              });
-              return retry;
-            }
-            throw err;
-          });
-        }
-        return res;
-      };
+      }
 
-      // LANGKAH 2 & 3: Synchronous Start Engine — Tap Anywhere on #starla-front-stage
+      // FASE 2: Gated video_5gKzK4lbTf6 watcher when button 6VpxF5tzDfS is clicked
+      var activeVideoWatcher = null;
+
+      function watchAndPlayVideo5gKz() {
+        if (activeVideoWatcher) {
+          activeVideoWatcher.stop();
+        }
+
+        var startTime = Date.now();
+        var isStopped = false;
+        var rafId = null;
+
+        function stop() {
+          if (isStopped) return;
+          isStopped = true;
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          if (activeVideoWatcher === watcherObj) {
+            activeVideoWatcher = null;
+          }
+        }
+
+        var watcherObj = { stop: stop };
+        activeVideoWatcher = watcherObj;
+
+        function checkAndPlay() {
+          if (isStopped) return;
+          var vids = document.querySelectorAll('video');
+          for (var i = 0; i < vids.length; i++) {
+            var v = vids[i];
+            if (window.__starlaIsVideo5gKz(v)) {
+              v.setAttribute('playsinline', '');
+              v.setAttribute('webkit-playsinline', '');
+              v.playsInline = true;
+              v.preload = 'auto';
+              v.muted = false;
+              v.volume = 1;
+
+              var p = v.play();
+              if (p && typeof p.catch === 'function') {
+                p.then(function() {
+                  if (!v.paused) stop();
+                }).catch(function(err) {
+                  // Instant fallback in <5ms: muted play
+                  setTimeout(function() {
+                    try {
+                      v.muted = true;
+                      var r = v.play();
+                      if (r && typeof r.then === 'function') {
+                        r.then(function() {
+                          if (!v.paused) stop();
+                        }).catch(function(){});
+                      }
+                    } catch(e){}
+                  }, 0);
+
+                  var unmuteOnNextTouch = function() {
+                    try {
+                      v.muted = false;
+                      v.volume = 1;
+                    } catch(e){}
+                    ['pointerdown', 'touchstart', 'click'].forEach(function(ev) {
+                      document.removeEventListener(ev, unmuteOnNextTouch, true);
+                    });
+                  };
+                  ['pointerdown', 'touchstart', 'click'].forEach(function(ev) {
+                    document.addEventListener(ev, unmuteOnNextTouch, true);
+                  });
+                });
+              } else if (!v.paused) {
+                stop();
+                return;
+              }
+            }
+          }
+
+          if (!isStopped) {
+            if (Date.now() - startTime < 6000) {
+              rafId = requestAnimationFrame(checkAndPlay);
+            } else {
+              stop();
+            }
+          }
+        }
+
+        checkAndPlay();
+      }
+
+      function isButton6VpxF5tzDfS(target) {
+        if (!target) return false;
+        try {
+          if (target.closest && target.closest('[data-model-id="6VpxF5tzDfS"], #acc-6VpxF5tzDfS, [data-represents*="6VpxF5tzDfS"], img[src*="6VpxF5tzDfS"], [data-model-id="5ZPukeMFffY"], #acc-5ZPukeMFffY, [data-represents*="5ZPukeMFffY"]')) {
+            return true;
+          }
+        } catch(e) {}
+        var curr = target;
+        for (var i = 0; i < 4 && curr; i++) {
+          if (curr.getAttribute) {
+            var mid = curr.getAttribute('data-model-id');
+            if (mid === '6VpxF5tzDfS' || mid === '5ZPukeMFffY') return true;
+            if (curr.id === 'acc-6VpxF5tzDfS' || curr.id === 'acc-5ZPukeMFffY') return true;
+            var rep = curr.getAttribute('data-represents');
+            if (rep && (rep.indexOf('6VpxF5tzDfS') !== -1 || rep.indexOf('5ZPukeMFffY') !== -1)) return true;
+            var src = curr.getAttribute('src');
+            if (src && src.indexOf('6VpxF5tzDfS') !== -1) return true;
+          }
+          curr = curr.parentElement;
+        }
+        return false;
+      }
+
+      // Non-blocking capture phase listener on document for 6VpxF5tzDfS (FASE 2)
+      ['pointerdown', 'click'].forEach(function(evtName) {
+        document.addEventListener(evtName, function(e) {
+          if (isButton6VpxF5tzDfS(e.target)) {
+            window.__starlaVideo5gKzUnlocked = true;
+            window.__starlaAllowVideo5gKz = true;
+
+            try {
+              var AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (!window.__storyAudioCtx && AudioCtx) window.__storyAudioCtx = new AudioCtx();
+              if (window.__storyAudioCtx && window.__storyAudioCtx.state === 'suspended') {
+                window.__storyAudioCtx.resume().catch(function(){});
+              }
+              if (window.DS && window.DS.audioContext) {
+                if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
+                if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
+                  window.DS.audioContext.ctx.resume();
+                }
+              }
+            } catch(err){}
+
+            watchAndPlayVideo5gKz();
+          }
+        }, true);
+      });
+
+      // -------------------------------------------------------------------------
+      // Module 3: Front Stage Start Handler & Event Deduplication (FASE 3)
+      // -------------------------------------------------------------------------
       function handleStartAction(e) {
-        if (isStarted) return;
+        var now = Date.now();
+        // Event deduplication: prevent pointerdown + click firing twice
+        if (isStarted || (now - lastInteractionTime < 450)) {
+          if (e && e.cancelable && e.type === 'click') {
+            try { e.preventDefault(); } catch(err){}
+          }
+          return;
+        }
+        lastInteractionTime = now;
         isStarted = true;
         window.__starlaFrontOpened = true;
         window.__starlaUserInteracted = true;
@@ -1089,10 +1245,11 @@
           try { e.preventDefault(); } catch(err){}
         }
 
-        // a. SEGERA sembunyikan #starla-front-stage & tambahkan class starla-started
+        // a. Hide #starla-front-stage synchronously
         document.body.classList.add('starla-started');
         document.documentElement.classList.add('starla-started');
 
+        if (!stageEl) stageEl = document.getElementById('starla-front-stage');
         if (stageEl) {
           stageEl.style.pointerEvents = 'none';
           stageEl.style.opacity = '0';
@@ -1101,13 +1258,13 @@
           }, 250);
         }
 
-        // b. Putar efek suara klik & fade-out backsound halaman depan
+        // b. Sound effect & fade out ambient
         try {
           StarlaAudio.playClickSfx();
           StarlaAudio.fadeOutAmbient(0.6);
         } catch(err){}
 
-        // c. Buka kunci AudioContext
+        // c. Unlock AudioContext synchronously
         try {
           var AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (!window.__storyAudioCtx && AudioCtx) {
@@ -1124,40 +1281,12 @@
           }
         } catch(err){}
 
-        try {
-          var allMedia = document.querySelectorAll('video, audio');
-          allMedia.forEach(function(m) {
-            try {
-              m.muted = false;
-              m.volume = 1;
-              if (m.tagName && m.tagName.toUpperCase() === 'VIDEO') {
-                m.setAttribute('playsinline', '');
-                m.setAttribute('webkit-playsinline', '');
-                m.playsInline = true;
-              }
-            } catch(e){}
-          });
-        } catch(err){}
-
-        // d. Klik otomatis seluruh pemicu start bawaan Storyline
+        // d. Auto-click native Storyline start buttons
         var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, button[data-ref="playIcon"], .play-button');
         startBtns.forEach(function(targetEl) {
-          ['touchstart', 'touchend', 'mousedown', 'mouseup', 'click'].forEach(function(evtName) {
-            try {
-              var evt;
-              if (typeof MouseEvent === 'function' && (evtName === 'click' || evtName.indexOf('mouse') === 0)) {
-                evt = new MouseEvent(evtName, { bubbles: true, cancelable: true, view: window });
-              } else {
-                evt = document.createEvent('Event');
-                evt.initEvent(evtName, true, true);
-              }
-              targetEl.dispatchEvent(evt);
-            } catch(e) {}
-          });
           try { targetEl.click(); } catch(err){}
         });
 
-        // Sembunyikan overlay & container
         var mContainer = document.getElementById('mobile-start-container');
         if (mContainer) {
           mContainer.style.setProperty('display', 'none', 'important');
@@ -1181,157 +1310,30 @@
           }
         } catch(err){}
 
-        // e. Auto-Fullscreen & Auto-Rotate Khusus Ponsel
+        // e. Non-blocking requestFullscreen & landscape lock
         var docEl = document.documentElement;
         var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-        var isMobileCoarse = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-        function tryLockLandscape() {
-          if (isMobileCoarse && window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
-            try {
-              window.screen.orientation.lock('landscape').catch(function(){});
-            } catch(e){}
-          }
-        }
-
         if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
           try {
             var fsPromise = rfs.call(docEl);
-            if (fsPromise && typeof fsPromise.then === 'function') {
-              fsPromise.then(function() {
-                tryLockLandscape();
-                window.dispatchEvent(new Event('resize'));
-              }).catch(function(err) {
-                console.log('[StarlaBudaya] Fullscreen notice:', err);
-              });
-            }
-          } catch(fsErr) {
-            console.log('[StarlaBudaya] Fullscreen call error:', fsErr);
-          }
+            if (fsPromise && typeof fsPromise.catch === 'function') fsPromise.catch(function(){});
+          } catch(e){}
         }
-        tryLockLandscape();
-
-        // Auto-rotate/auto-scale CSS untuk ponsel portrait
-        if (isMobileCoarse) {
-          [50, 200, 500, 900].forEach(function(delay) {
-            setTimeout(function() {
-              window.dispatchEvent(new Event('resize'));
-            }, delay);
-          });
+        if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+          try {
+            window.screen.orientation.lock('landscape').catch(function(){});
+          } catch(e){}
         }
 
-        // f. Auto-Play Video Intro
-        var watchStart = Date.now();
-        var videoObserver = null;
+        // f. Auto-play intro video smoothly
+        playIntroVideos();
 
-        function scanAndPlayVideos() {
-          var vids = document.querySelectorAll('video');
-          vids.forEach(function(v) {
-            if (window.__starlaIsVideo5gKz && window.__starlaIsVideo5gKz(v) && window.__starlaAllowVideo5gKz !== true) {
-              v.autoplay = false;
-              v.removeAttribute('autoplay');
-              try { v.pause(); } catch(e){}
-              return;
-            }
-            if (v.paused || v.currentTime < 0.1) {
-              enforceVideoPlay(v);
-            }
-          });
-        }
-
-        scanAndPlayVideos();
-
-        if (window.MutationObserver) {
-          videoObserver = new MutationObserver(function() {
-            scanAndPlayVideos();
-          });
-          videoObserver.observe(document.body || document.documentElement, {
-            childList: true,
-            subtree: true
-          });
-        }
-
-        function videoWatcherLoop() {
-          scanAndPlayVideos();
-          if (Date.now() - watchStart < 3000) {
-            requestAnimationFrame(videoWatcherLoop);
-          } else {
-            if (videoObserver) {
-              try { videoObserver.disconnect(); } catch(e){}
-              videoObserver = null;
-            }
-          }
-        }
-        requestAnimationFrame(videoWatcherLoop);
-
-        // g. Picu resize events bertahap (50ms, 200ms, 500ms, 900ms)
-        [50, 200, 500, 900].forEach(function(delay) {
-          setTimeout(function() {
-            window.dispatchEvent(new Event('resize'));
-          }, delay);
-        });
-
-        // h. Recovery Watchdog
-        [250, 700, 1400].forEach(function(delay) {
-          setTimeout(function() {
-            try {
-              if (stageEl) stageEl.style.display = 'none';
-              var preso = document.getElementById('preso');
-              if (preso) {
-                preso.style.opacity = '1';
-                preso.style.visibility = 'visible';
-              }
-              var areaPrimary = document.querySelector('.area-primary');
-              if (areaPrimary) {
-                areaPrimary.style.opacity = '1';
-                areaPrimary.style.visibility = 'visible';
-              }
-              var mContainer = document.getElementById('mobile-start-container');
-              if (mContainer) mContainer.style.display = 'none';
-
-              scanAndPlayVideos();
-              window.dispatchEvent(new Event('resize'));
-            } catch(e){}
-          }, delay);
-        });
+        // g. Single resize event when transition finishes (250ms) - NO LOOP SPAM
+        setTimeout(function() {
+          window.dispatchEvent(new Event('resize'));
+        }, 250);
       }
 
-      // Reset Bersih Pada pageshow & BFCache (event.persisted)
-      function resetFrontStage() {
-        window.__starlaFrontOpened = false;
-        window.__starlaUserInteracted = false;
-        window.__starlaAllowVideo5gKz = false;
-        isStarted = false;
-        document.body.classList.remove('starla-started');
-        document.documentElement.classList.remove('starla-started');
-        if (!stageEl) stageEl = document.getElementById('starla-front-stage');
-        if (stageEl) {
-          stageEl.style.display = 'flex';
-          stageEl.style.opacity = '1';
-          stageEl.style.pointerEvents = 'auto';
-          stageEl.style.visibility = 'visible';
-        }
-        if (typeof window.__starlaWipeResumeStorage === 'function') {
-          window.__starlaWipeResumeStorage();
-        }
-      }
-
-      window.addEventListener('pageshow', function(e) {
-        if (e.persisted) {
-          window.location.reload();
-          return;
-        }
-        resetFrontStage();
-        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            regs.forEach(function(r) {
-              try { r.unregister(); } catch(err){}
-            });
-          }).catch(function(){});
-        }
-      });
-
-      // LANGKAH 2: Tap Anywhere pada #starla-front-stage (Anti-Race Condition Saat Reload Cepat)
       function attachFrontStageListeners() {
         if (!stageEl) stageEl = document.getElementById('starla-front-stage');
         if (stageEl) {
@@ -1342,218 +1344,9 @@
         }
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachFrontStageListeners);
-      } else {
-        attachFrontStageListeners();
-      }
-    })();
-  </script>
-
-  <script>
-    /**
-     * STARLA Budaya - Core Game Architecture
-     * Orchestrates fullscreen handling, orientation alerts, in-memory active session tracking,
-     * auto-certificate routing, full-screen sharp feedback backdrops on all states, and video autoplay.
-     */
-    window.StarlaBudaya = (function() {
-      'use strict';
-
-      var SLIDE_SCENE_PREFIX = '_player.5sAEMI5psmg.';
-
-      // Slide mapping (All validated from html5/data/js/data.js)
-      var SLIDES = {
-        INTRO: '6AR4SV4ZYat',
-        LOGIN: '5ml7jyaiXGc',
-        WELCOME: '5dLAzY4SKGI',
-        MENU_MATERI: '5iew2M44w24',
-        MENU_UTAMA: '6eHtnAfM3bY',
-        KUIS_START: '6oOWqUyP2WL',
-        KUIS_CERT: '6ddgVMlBGEg',
-        GAME_START: '6G1VrKuOhCw',
-        GAME_CERT: '6WIqLhHr1Cm'
-      };
-
-      // Benar & Salah Layer IDs for feedback game mode
-      var FEEDBACK_LAYERS = {
-        BENAR: [
-          '5wLllNjELzq', '5dINY7oQloY', '6ozsIxVZ0Ap', '6IjgPGebEz0', '6QkcRhah4eX',
-          '6rbLNT1TBry', '61rhLpSYjLN', '5lnjz9IXetF', '6R7oc9XCNf5', '6O0xCHrwpAI'
-        ],
-        SALAH: [
-          '6BvBZyuy25S', '6YjsJKEnG88', '6RqFMmFCoCW', '6AIJEmDTCL3', '5aP1qzv44A6',
-          '61Bo7wMMSKu', '6NOS9sRsO3U', '5dPQ9dmNB1n', '6AYOrp7ei5M', '6ULkx4Aw2EM'
-        ]
-      };
-
-      // In-memory active run only (reset on reload)
-      window.__starlaActiveRun = {
-        accountKey: '',
-        nama: '',
-        sekolah: '',
-        kuisCompleted: false,
-        gameCompleted: false,
-        poin: 0,
-        score: 0
-      };
-
-      var lastKnownSlideId = null;
-
-      // Normalization helper
-      function normalize(str) {
-        return (str || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
-      }
-
-      function buildAccountKey(nama, sekolah) {
-        return normalize(nama) + '::' + normalize(sekolah);
-      }
-
-      // Mobile device detector
-      function isMobileDevice() {
-        return (
-          (window.isMobile && window.isMobile.any) ||
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024) ||
-          (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
-        );
-      }
-
-      // Orientation checker
-      function updateOrientationAlert() {
-        var alertEl = document.getElementById('smart-orientation-alert');
-        if (!alertEl) return;
-        var isPortrait = window.innerHeight > window.innerWidth;
-        if (isMobileDevice() && isPortrait) {
-          alertEl.classList.add('visible');
-        } else {
-          alertEl.classList.remove('visible');
-        }
-      }
-
-      // Fullscreen Toggling Utility
-      function toggleFullscreen() {
-        var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-        if (!isFs) {
-          var docEl = document.documentElement;
-          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-          if (rfs) {
-            var pr = rfs.call(docEl);
-            if (pr && pr.catch) pr.catch(function(){});
-          }
-          if (screen.orientation && typeof screen.orientation.lock === 'function') {
-            try { screen.orientation.lock('landscape').catch(function(){}); } catch(e){}
-          }
-        } else {
-          var efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-          if (efs) {
-            var pr2 = efs.call(document);
-            if (pr2 && pr2.catch) pr2.catch(function(){});
-          }
-        }
-      }
-
-      // Slide Navigation via Storyline PubSub
-      function navigateToSlide(slideId) {
-        window.__starlaAllowVideo5gKz = false;
-        if (!slideId) return false;
-        var fullRef = slideId.indexOf('_player.') === 0 ? slideId : (SLIDE_SCENE_PREFIX + slideId);
-        try {
-          if (window.DS && window.DS.pubSub) {
-            window.DS.pubSub.trigger('nextSlide:requesting', fullRef);
-            return true;
-          }
-        } catch(e) {
-          console.warn('[StarlaBudaya] Navigation notice:', e);
-        }
-        return false;
-      }
-
-      // Get Current Slide ID
-      function getCurrentSlideId() {
-        try {
-          if (window.DS && window.DS.windowManager) {
-            var cur = window.DS.windowManager.getCurrentWindowSlide();
-            if (cur) {
-              if (cur.id) return cur.id;
-              if (cur.absoluteId) {
-                var parts = cur.absoluteId.split('.');
-                return parts[parts.length - 1];
-              }
-            }
-          }
-        } catch(e){}
-        try {
-          if (window.GetPlayer) {
-            var last = window.GetPlayer().GetVar('LastSlideViewed_5jpgil4RGjK');
-            if (last) {
-              var p = last.split('.');
-              return p[p.length - 1];
-            }
-          }
-        } catch(e){}
-        return null;
-      }
-
-      // Autoplay Cascade for Intro Video (strictly gated for video_5gKzK4lbTf6)
-      function attemptVideoAutoplay() {
-        var videos = document.querySelectorAll('video');
-        if (!videos.length) return false;
-
-        videos.forEach(function(video) {
-          if (window.__starlaIsVideo5gKz && window.__starlaIsVideo5gKz(video)) {
-            if (window.__starlaAllowVideo5gKz !== true) {
-              video.autoplay = false;
-              video.removeAttribute('autoplay');
-              try { video.pause(); } catch(e){}
-              return;
-            }
-          }
-
-          if (video.__starlaAutoplayHandled && !video.paused) return;
-          video.__starlaAutoplayHandled = true;
-
-          video.setAttribute('playsinline', '');
-          video.setAttribute('webkit-playsinline', '');
-          video.playsInline = true;
-
-          if (!window.__starlaUserInteracted) {
-            video.muted = true;
-          } else {
-            video.muted = false;
-            video.volume = 1;
-          }
-
-          var promise = video.play();
-          if (promise && typeof promise.catch === 'function') {
-            promise.catch(function(err) {
-              // Jika browser mobile memblokir audio asinkron (NotAllowedError), langsung jalankan video.muted = true; video.play() dalam <5ms
-              setTimeout(function() {
-                try {
-                  video.muted = true;
-                  var p2 = video.play();
-                  if (p2 && typeof p2.catch === 'function') p2.catch(function(){});
-                } catch(e){}
-              }, 0);
-
-              var unmuteOnNextTouch = function() {
-                try {
-                  video.muted = false;
-                  video.volume = 1;
-                } catch(e){}
-                ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                  document.removeEventListener(evt, unmuteOnNextTouch, true);
-                });
-              };
-              ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                document.addEventListener(evt, unmuteOnNextTouch, true);
-              });
-            });
-          }
-        });
-        return true;
-      }
-
-      // Auto-dismiss native Storyline modals & bypass resume prompt
+      // -------------------------------------------------------------------------
+      // Module 4: DOM Subsystem & Hierarchy (FASE 4)
+      // -------------------------------------------------------------------------
       function bypassNativeModals() {
         var startBtns = document.querySelectorAll('#mobile-start-button, .mobile-start-overlay button, .start-overlay button, .play-button');
         startBtns.forEach(function(b) {
@@ -1564,13 +1357,13 @@
           try { window.DS.renderEngine.killPlayerPropertiesImagePreview(); } catch(e){}
         }
 
-        // Auto-bypass Storyline Resume Prompt dialogs
         var resumeModals = document.querySelectorAll('.resume-prompt, .message-window.resume-prompt-slide, [data-model-id*="ResumePromptSlide"]');
-        resumeModals.forEach(function(modal) {
+        for (var i = 0; i < resumeModals.length; i++) {
+          var modal = resumeModals[i];
           modal.style.setProperty('display', 'none', 'important');
           modal.style.setProperty('visibility', 'hidden', 'important');
           modal.style.setProperty('pointer-events', 'none', 'important');
-        });
+        }
 
         var restartBtn = document.querySelector('[data-ref="restart"]') ||
                          document.querySelector('[data-model-id="5jpgil4RGjK_ResumePromptSlide_btn1"]') ||
@@ -1585,9 +1378,7 @@
         }
       }
 
-      // FASE 2: Penyelarasan Posisi Atas & Lapisan Teratas (Presisi & Responsif di Semua Skala Layar)
       function alignTopModalsAndCloseButtons() {
-        // Hitung faktor skala aktif Storyline (scale = slideWidth / 1280 atau transform: scale(...) shadow dom)
         var scale = 1;
         var shadowDom = document.querySelector('.acc-shadow-dom');
         if (shadowDom && shadowDom.style && shadowDom.style.transform) {
@@ -1637,7 +1428,7 @@
         objs6eb4.forEach(function(o) { updateTranslateY(o, 31.5); });
         updateShadow('acc-6eb4PmDsps1', '31.5px');
 
-        // Tombol close pasangannya ([data-model-id="5ZMtYjS7oxd"]) -> targetNativeTop = 31.5px
+        // Close button ([data-model-id="5ZMtYjS7oxd"]) -> targetNativeTop = 31.5px
         var btns5ZMt = document.querySelectorAll('.slide-object[data-model-id="5ZMtYjS7oxd"], [data-model-id="5ZMtYjS7oxd"].slide-object');
         btns5ZMt.forEach(function(b) { updateTranslateY(b, 31.5); });
         updateShadow('acc-5ZMtYjS7oxd', '31.5px');
@@ -1647,18 +1438,22 @@
         objs6Nm.forEach(function(o) { updateTranslateY(o, 31.5); });
         updateShadow('acc-6NmAh1Gt8vY', '31.5px');
 
-        // Tombol close pasangannya ([data-model-id="5Zr3famKnLd"]) -> targetNativeTop = 29.5px
+        // Close button ([data-model-id="5Zr3famKnLd"]) -> targetNativeTop = 29.5px
         var btns5Zr = document.querySelectorAll('.slide-object[data-model-id="5Zr3famKnLd"], [data-model-id="5Zr3famKnLd"].slide-object');
         btns5Zr.forEach(function(b) { updateTranslateY(b, 29.5); });
         updateShadow('acc-5Zr3famKnLd', '29.5px');
       }
 
-      // LANGKAH 1: Apply Under-Layer State Backdrop & Precise Button Accessibility
       function processFeedbackLayers() {
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
 
-        layers.forEach(function(layer) {
-          // Tambahkan backdrop tanpa merusak urutan DOM bawaan React
+        for (var l = 0; l < layers.length; l++) {
+          var layer = layers[l];
+          if (layer.dataset.starlaProcessed === '1') {
+            continue;
+          }
+
+          // 1. Modal backdrop (Phase 1 point 3)
           var backdrop = layer.querySelector('.starla-state-backdrop');
           if (!backdrop) {
             backdrop = document.createElement('div');
@@ -1667,9 +1462,10 @@
             layer.appendChild(backdrop);
           }
 
-          // FASE 3: Background SVG paksa ke lapisan 0, non-interaktif, dan pindahkan ke anak pertama layer
+          // 2. FASE 4: Background SVG at z-index 0, non-interactive, moved as first child
           var bgSvgs = layer.querySelectorAll('svg');
-          bgSvgs.forEach(function(svgEl) {
+          for (var s = 0; s < bgSvgs.length; s++) {
+            var svgEl = bgSvgs[s];
             if (svgEl.querySelector('rect[id^="slide-bg-"]') || svgEl.querySelector('pattern[id^="pattern-fill-"]') || (svgEl.id && svgEl.id.indexOf('slide-bg') !== -1)) {
               svgEl.style.setProperty('position', 'absolute', 'important');
               svgEl.style.setProperty('left', '0', 'important');
@@ -1680,19 +1476,19 @@
                 layer.insertBefore(svgEl, layer.firstChild);
               }
             }
-          });
+          }
 
-          // FASE 3: Latar gelap Rectangle 1 diatur ke z-index: 2 non-blocking
+          // 3. FASE 4: Rectangle 1 at z-index 2 non-blocking
           var rect1Elements = layer.querySelectorAll('[data-model-id="69JRqR1oNVY"], [data-model-id="5WpwQ6b6IF5"], [data-model-id="6cC0Hzm97cu"], [data-model-id="6O3rNruYh7J"], [data-model-id="692ysfOgrrl"], [data-model-id="67wByfUR3M4"], [data-model-id="5Zdim6oDgtl"], [data-acc-text="Rectangle 1"]');
-          rect1Elements.forEach(function(el) {
-            el.style.setProperty('z-index', '2', 'important');
-            el.style.setProperty('pointer-events', 'none', 'important');
-          });
+          for (var r = 0; r < rect1Elements.length; r++) {
+            rect1Elements[r].style.setProperty('z-index', '2', 'important');
+            rect1Elements[r].style.setProperty('pointer-events', 'none', 'important');
+          }
 
-          // FASE 3: Modal content images (6EfvCxuLoY5, 5ZAJjyZwSHr, 6qmYZKenWib, dsb.)
-          // WAJIB pointer-events: none, z-index: 25, opacity: 1, visibility: visible (dan SVG <image> opacity: 1)
+          // 4. FASE 4: Modal content images (6EfvCxuLoY5, 5ZAJjyZwSHr, 6qmYZKenWib, etc.) -> z-index 25, pointer-events none
           var contentImgs = layer.querySelectorAll('img[src*="6EfvCxuLoY5"], img[src*="5ZAJjyZwSHr"], img[src*="6qmYZKenWib"], [data-acc-text*="info.png"], [data-acc-text*="67).png"], [data-acc-text*="pralogin"], [data-model-id="6eb4PmDsps1"], [data-model-id="6NmAh1Gt8vY"], [data-model-id="6exxdHWPhvw"]');
-          contentImgs.forEach(function(img) {
+          for (var ci = 0; ci < contentImgs.length; ci++) {
+            var img = contentImgs[ci];
             img.style.setProperty('pointer-events', 'none', 'important');
             img.style.setProperty('z-index', '25', 'important');
             img.style.setProperty('opacity', '1', 'important');
@@ -1704,81 +1500,68 @@
               parentObj.style.setProperty('opacity', '1', 'important');
               parentObj.style.setProperty('visibility', 'visible', 'important');
               var svgImgs = parentObj.querySelectorAll('image');
-              svgImgs.forEach(function(s) {
-                s.setAttribute('opacity', '1');
-                s.style.setProperty('opacity', '1', 'important');
-                s.style.setProperty('visibility', 'visible', 'important');
-              });
+              for (var si = 0; si < svgImgs.length; si++) {
+                svgImgs[si].setAttribute('opacity', '1');
+                svgImgs[si].style.setProperty('opacity', '1', 'important');
+                svgImgs[si].style.setProperty('visibility', 'visible', 'important');
+              }
             }
-            if (img.querySelectorAll) {
-              var svgImgs = img.querySelectorAll('image');
-              svgImgs.forEach(function(s) {
-                s.setAttribute('opacity', '1');
-                s.style.setProperty('opacity', '1', 'important');
-                s.style.setProperty('visibility', 'visible', 'important');
-              });
-            }
-          });
+          }
 
-          // FASE 3: Tombol close pasangannya (5Zr3famKnLd, 5ZMtYjS7oxd, 5tBmZlAoMEi) tepat di atas gambar pada z-index 30
+          // 5. FASE 4: Close buttons (5Zr3famKnLd, 5ZMtYjS7oxd, 5tBmZlAoMEi) -> z-index 30, pointer-events auto
           var topCloseBtns = layer.querySelectorAll('[data-model-id="5Zr3famKnLd"], [data-model-id="5ZMtYjS7oxd"], [data-model-id="5tBmZlAoMEi"]');
-          topCloseBtns.forEach(function(btn) {
+          for (var tcb = 0; tcb < topCloseBtns.length; tcb++) {
+            var btn = topCloseBtns[tcb];
             btn.style.setProperty('z-index', '30', 'important');
             btn.style.setProperty('pointer-events', 'auto', 'important');
             btn.style.setProperty('cursor', 'pointer', 'important');
-            var parentObj = btn.closest ? btn.closest('.slide-object') : null;
-            if (parentObj) {
-              parentObj.style.setProperty('z-index', '30', 'important');
-              parentObj.style.setProperty('pointer-events', 'auto', 'important');
-              parentObj.style.setProperty('cursor', 'pointer', 'important');
+            var pObj = btn.closest ? btn.closest('.slide-object') : null;
+            if (pObj) {
+              pObj.style.setProperty('z-index', '30', 'important');
+              pObj.style.setProperty('pointer-events', 'auto', 'important');
+              pObj.style.setProperty('cursor', 'pointer', 'important');
             }
-          });
+          }
 
-          // SELURUH tombol close lainnya di state/layer WAJIB berada di lapisan paling atas (z-index 100) dan selalu bisa diklik
-          var closeBtns = layer.querySelectorAll('[data-acc-text*="7409592"], img[src*="6ljF2bhskoS"], [data-acc-text*="close" i], [data-acc-text*="tutup" i], [data-acc-text*="silang" i], [data-model-id="5Z3CAwZT8J0"], [data-model-id="60OqR1FSbfo"], [data-model-id="6niCawvLG1a"], [data-model-id="5dFWkaH35V0"]');
-          closeBtns.forEach(function(btn) {
-            btn.style.setProperty('z-index', '100', 'important');
-            btn.style.setProperty('pointer-events', 'auto', 'important');
-            btn.style.setProperty('cursor', 'pointer', 'important');
-            var parentObj = btn.closest ? btn.closest('.slide-object') : null;
-            if (parentObj) {
-              parentObj.style.setProperty('z-index', '100', 'important');
-              parentObj.style.setProperty('pointer-events', 'auto', 'important');
-              parentObj.style.setProperty('cursor', 'pointer', 'important');
-            }
-          });
-
-          // FASE 3: Tombol lanjut feedback kuis (z-index 25 di atas z-index 0 background)
+          // 6. FASE 4: Feedback quiz lanjut buttons -> z-index 30, pointer-events auto
           var lanjutBtns = layer.querySelectorAll('[data-model-id="67BmTMfY8zv"], [data-model-id="5vw6iEJUiYN"], img[src*="lanjut"], [data-acc-text*="lanjut" i]');
-          lanjutBtns.forEach(function(btn) {
-            btn.style.setProperty('z-index', '25', 'important');
-            btn.style.setProperty('pointer-events', 'auto', 'important');
-            btn.style.setProperty('cursor', 'pointer', 'important');
-            var parentObj = btn.closest ? btn.closest('.slide-object') : null;
-            if (parentObj) {
-              parentObj.style.setProperty('z-index', '25', 'important');
-              parentObj.style.setProperty('pointer-events', 'auto', 'important');
-              parentObj.style.setProperty('cursor', 'pointer', 'important');
+          for (var lb = 0; lb < lanjutBtns.length; lb++) {
+            var lBtn = lanjutBtns[lb];
+            lBtn.style.setProperty('z-index', '30', 'important');
+            lBtn.style.setProperty('pointer-events', 'auto', 'important');
+            lBtn.style.setProperty('cursor', 'pointer', 'important');
+            var plObj = lBtn.closest ? lBtn.closest('.slide-object') : null;
+            if (plObj) {
+              plObj.style.setProperty('z-index', '30', 'important');
+              plObj.style.setProperty('pointer-events', 'auto', 'important');
+              plObj.style.setProperty('cursor', 'pointer', 'important');
             }
-          });
+          }
 
+          // Feedback Benar / Salah accents
           var layerHtml = layer.innerHTML || '';
           var layerModelId = layer.getAttribute('data-model-id') || '';
 
-          // Check for Benar
           var isBenar = false;
-          FEEDBACK_LAYERS.BENAR.forEach(function(id) {
-            if (layerModelId === id || layerHtml.indexOf(id) !== -1) isBenar = true;
-          });
+          for (var bi = 0; bi < FEEDBACK_LAYERS.BENAR.length; bi++) {
+            var bid = FEEDBACK_LAYERS.BENAR[bi];
+            if (layerModelId === bid || layerHtml.indexOf(bid) !== -1) {
+              isBenar = true;
+              break;
+            }
+          }
           if (!isBenar && (layerHtml.indexOf('Slide6Yl1XmK7vDs') !== -1 || layerHtml.indexOf('64trbzmlqII') !== -1 || layerHtml.indexOf('6cVvYbugY8D') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_CorrectReview') !== -1)) {
             isBenar = true;
           }
 
-          // Check for Salah
           var isSalah = false;
-          FEEDBACK_LAYERS.SALAH.forEach(function(id) {
-            if (layerModelId === id || layerHtml.indexOf(id) !== -1) isSalah = true;
-          });
+          for (var si2 = 0; si2 < FEEDBACK_LAYERS.SALAH.length; si2++) {
+            var sid = FEEDBACK_LAYERS.SALAH[si2];
+            if (layerModelId === sid || layerHtml.indexOf(sid) !== -1) {
+              isSalah = true;
+              break;
+            }
+          }
           if (!isSalah && (layerHtml.indexOf('Slide6CCYce11Vkv') !== -1 || layerHtml.indexOf('6F5Z4MpnsdU') !== -1 || layerHtml.indexOf('5gkgaNEdBEt') !== -1 || layerHtml.indexOf('6mxkFyRe2qp_IncorrectReview') !== -1)) {
             isSalah = true;
           }
@@ -1790,21 +1573,77 @@
             layer.classList.remove('starla-feedback-benar');
             layer.classList.add('starla-feedback-salah');
           }
-        });
+
+          layer.dataset.starlaProcessed = '1';
+        }
       }
 
-      // Safe image error handler to prevent broken image icons on top of backdrop
-      function setupImageFallbacks() {
-        document.addEventListener('error', function(e) {
-          if (e.target && e.target.tagName === 'IMG') {
-            e.target.style.opacity = '0';
-            e.target.style.visibility = 'hidden';
-            e.target.style.display = 'none';
+      function sanitizeTextNodes(root) {
+        try {
+          var container = root || document.getElementById('preso') || document.body;
+          var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+          var node;
+          while ((node = walker.nextNode())) {
+            if (node.nodeValue && new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'i').test(node.nodeValue)) {
+              node.nodeValue = node.nodeValue.replace(new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'gi'), 'STARLA BUDAYA');
+              if (node.parentElement && /mobile-start|mobile-load/i.test(node.parentElement.className + ' ' + (node.parentElement.id || ''))) {
+                node.parentElement.style.display = 'none';
+              }
+            }
           }
-        }, true);
+        } catch(e){}
       }
 
-      // Safe matcher helper
+      // -------------------------------------------------------------------------
+      // Module 5: Session & Navigation Subsystem
+      // -------------------------------------------------------------------------
+      function normalize(str) {
+        return (str || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+      }
+
+      function buildAccountKey(nama, sekolah) {
+        return normalize(nama) + '::' + normalize(sekolah);
+      }
+
+      function navigateToSlide(slideId) {
+        window.__starlaVideo5gKzUnlocked = false;
+        window.__starlaAllowVideo5gKz = false;
+        if (!slideId) return false;
+        var fullRef = slideId.indexOf('_player.') === 0 ? slideId : (SLIDE_SCENE_PREFIX + slideId);
+        try {
+          if (window.DS && window.DS.pubSub) {
+            window.DS.pubSub.trigger('nextSlide:requesting', fullRef);
+            return true;
+          }
+        } catch(e) {}
+        return false;
+      }
+
+      function getCurrentSlideId() {
+        try {
+          if (window.DS && window.DS.windowManager) {
+            var cur = window.DS.windowManager.getCurrentWindowSlide();
+            if (cur) {
+              if (cur.id) return cur.id;
+              if (cur.absoluteId) {
+                var parts = cur.absoluteId.split('.');
+                return parts[parts.length - 1];
+              }
+            }
+          }
+        } catch(e){}
+        try {
+          if (window.GetPlayer) {
+            var last = window.GetPlayer().GetVar('LastSlideViewed_5jpgil4RGjK');
+            if (last) {
+              var p = last.split('.');
+              return p[p.length - 1];
+            }
+          }
+        } catch(e){}
+        return null;
+      }
+
       function matchesTarget(target, modelId, imgSrc) {
         if (!target) return false;
         try {
@@ -1820,7 +1659,6 @@
         return false;
       }
 
-      // Intercept Menu activity buttons during active run
       function setupMenuInterception() {
         function handleInterception(e) {
           var run = window.__starlaActiveRun;
@@ -1866,35 +1704,11 @@
         document.addEventListener('touchend', handleInterception, true);
       }
 
-      // FASE 1: Lightweight DOM Guardian to sanitize text nodes and hide mobile titles
-      function sanitizeTextNodes(root) {
-        try {
-          var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, null, false);
-          var node;
-          while ((node = walker.nextNode())) {
-            if (node.nodeValue && new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'i').test(node.nodeValue)) {
-              node.nodeValue = node.nodeValue.replace(new RegExp(['STARLA','BUDAYA','GO'].join('\\s+'), 'gi'), 'STARLA BUDAYA');
-              if (node.parentElement && /mobile-start|mobile-load/i.test(node.parentElement.className + ' ' + (node.parentElement.id || ''))) {
-                node.parentElement.style.display = 'none';
-              }
-            }
-          }
-        } catch(e){}
-      }
-
-      // Main Cycle Monitor
-      function runCycle() {
-        bypassNativeModals();
-        alignTopModalsAndCloseButtons();
-        processFeedbackLayers();
-        sanitizeTextNodes(document.body);
-        if (window.__starlaUserInteracted) {
-          attemptVideoAutoplay();
-        }
-
+      function checkSlideAndSession() {
         var curSlideId = getCurrentSlideId();
         if (curSlideId && curSlideId !== lastKnownSlideId) {
           lastKnownSlideId = curSlideId;
+          window.__starlaVideo5gKzUnlocked = false;
           window.__starlaAllowVideo5gKz = false;
           window.dispatchEvent(new Event('resize'));
         }
@@ -1912,7 +1726,6 @@
         try { curPoin = player.GetVar('poin') || 0; } catch(e){}
         try { curScore = player.GetVar('6pq3GkKswiA.') || 0; } catch(e){}
 
-        // Track murid identity in temporary active run
         if (curNama && curSekolah) {
           var accountKey = buildAccountKey(curNama, curSekolah);
           if (window.__starlaActiveRun.accountKey !== accountKey) {
@@ -1924,7 +1737,6 @@
           }
         }
 
-        // Track certificate completion within active run
         if (window.__starlaActiveRun.accountKey && curSlideId) {
           if (curSlideId === SLIDES.KUIS_CERT) {
             if (!window.__starlaActiveRun.kuisCompleted) {
@@ -1948,190 +1760,141 @@
         }
       }
 
-      // LANGKAH 4: Auto-play video_5gKzK4lbTf6 saat menekan tombol 6VpxF5tzDfS / 5ZPukeMFffY
-      function setupVideoButtonWatcher() {
-        function isButton6VpxF5tzDfS(target) {
-          if (!target) return false;
-          try {
-            if (target.closest && (
-              target.closest('[data-model-id="6VpxF5tzDfS"]') ||
-              target.closest('#acc-6VpxF5tzDfS') ||
-              target.closest('[data-represents*="6VpxF5tzDfS"]') ||
-              target.closest('img[src*="6VpxF5tzDfS"]') ||
-              target.closest('[data-model-id="5ZPukeMFffY"]') ||
-              target.closest('#acc-5ZPukeMFffY') ||
-              target.closest('[data-represents*="5ZPukeMFffY"]')
-            )) return true;
-          } catch(e) {}
-          var curr = target;
-          for (var i = 0; i < 5 && curr; i++) {
-            if (curr.getAttribute) {
-              var mid = curr.getAttribute('data-model-id');
-              if (mid === '6VpxF5tzDfS' || mid === '5ZPukeMFffY') return true;
-              if (curr.id === 'acc-6VpxF5tzDfS' || curr.id === 'acc-5ZPukeMFffY') return true;
-              var rep = curr.getAttribute('data-represents');
-              if (rep && (rep.indexOf('6VpxF5tzDfS') !== -1 || rep.indexOf('5ZPukeMFffY') !== -1)) return true;
-              var src = curr.getAttribute('src');
-              if (src && src.indexOf('6VpxF5tzDfS') !== -1) return true;
-            }
-            curr = curr.parentElement;
-          }
-          return false;
-        }
+      // -------------------------------------------------------------------------
+      // Module 6: Scheduled Observer & Debounced Resize (FASE 1 & 3)
+      // -------------------------------------------------------------------------
+      var domUpdateScheduled = false;
 
-        function unlockAndPlayTargetVideo() {
-          // 1. Set flag global agar video_5gKzK4lbTf6 diizinkan berputar
-          window.__starlaAllowVideo5gKz = true;
+      function applyDomTransformations() {
+        domUpdateScheduled = false;
+        bypassNativeModals();
+        alignTopModalsAndCloseButtons();
+        processFeedbackLayers();
+        sanitizeTextNodes();
+        checkSlideAndSession();
+      }
 
-          // 2. Buka kunci AudioContext secara sinkron
-          try {
-            var AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!window.__storyAudioCtx && AudioCtx) window.__storyAudioCtx = new AudioCtx();
-            if (window.__storyAudioCtx && window.__storyAudioCtx.state === 'suspended') {
-              window.__storyAudioCtx.resume().catch(function(){});
-            }
-            if (window.DS && window.DS.audioContext) {
-              if (typeof window.DS.audioContext.resume === 'function') window.DS.audioContext.resume();
-              if (window.DS.audioContext.ctx && typeof window.DS.audioContext.ctx.resume === 'function') {
-                window.DS.audioContext.ctx.resume();
-              }
-            }
-          } catch(e) {}
+      function scheduleDomUpdate() {
+        if (domUpdateScheduled) return;
+        domUpdateScheduled = true;
+        requestAnimationFrame(applyDomTransformations);
+      }
 
-          // 3. Jalankan pemantau aktif (rAF + MutationObserver selama 4 detik)
-          var watchStart = Date.now();
-          var videoObs = null;
+      var resizeScheduled = false;
 
-          function tryFindAndPlay() {
-            var videos = document.querySelectorAll('video');
-            videos.forEach(function(v) {
-              if (window.__starlaIsVideo5gKz && window.__starlaIsVideo5gKz(v)) {
-                v.style.setProperty('visibility', 'visible', 'important');
-                v.style.setProperty('display', 'block', 'important');
-                v.style.setProperty('opacity', '1', 'important');
-                v.setAttribute('playsinline', '');
-                v.setAttribute('webkit-playsinline', '');
-                v.playsInline = true;
-                v.muted = false;
-                v.volume = 1.0;
-                var playP = v.play();
-                if (playP && typeof playP.catch === 'function') {
-                  playP.catch(function() {
-                    try {
-                      v.muted = true;
-                      var r2 = v.play();
-                      if (r2 && typeof r2.catch === 'function') r2.catch(function(){});
-                    } catch(e){}
-                    var unm = function() {
-                      try { v.muted = false; v.volume = 1; } catch(e){}
-                      ['pointerdown', 'touchstart', 'click'].forEach(function(ev) {
-                        document.removeEventListener(ev, unm, true);
-                      });
-                    };
-                    ['pointerdown', 'touchstart', 'click'].forEach(function(ev) {
-                      document.addEventListener(ev, unm, true);
-                    });
-                  });
-                }
-              }
-            });
-          }
-
-          tryFindAndPlay();
-
-          if (window.MutationObserver) {
-            videoObs = new MutationObserver(function() {
-              tryFindAndPlay();
-            });
-            videoObs.observe(document.body || document.documentElement, {
-              childList: true, subtree: true
-            });
-          }
-
-          function videoWatchLoop() {
-            tryFindAndPlay();
-            if (Date.now() - watchStart < 4000) {
-              requestAnimationFrame(videoWatchLoop);
-            } else {
-              if (videoObs) {
-                try { videoObs.disconnect(); } catch(e) {}
-                videoObs = null;
-              }
-            }
-          }
-          requestAnimationFrame(videoWatchLoop);
-        }
-
-        ['pointerdown', 'touchend', 'click'].forEach(function(evtName) {
-          document.addEventListener(evtName, function(e) {
-            if (isButton6VpxF5tzDfS(e.target)) {
-              unlockAndPlayTargetVideo();
-            }
-          }, true);
+      function onDebouncedResize() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+        requestAnimationFrame(function() {
+          resizeScheduled = false;
+          alignTopModalsAndCloseButtons();
         });
       }
 
-      // Initialization
+      // Scoped lightweight MutationObserver (Phase 1 point 2)
+      var slideObserver = null;
+
+      function initScopedObserver() {
+        var targetNode = document.getElementById('slide-window') || document.getElementById('preso');
+        if (!targetNode) return;
+
+        if (window.MutationObserver) {
+          slideObserver = new MutationObserver(function() {
+            scheduleDomUpdate();
+          });
+          // STRICT RULE: Only observe #slide-window / #preso with childList and class attributes
+          slideObserver.observe(targetNode, {
+            childList: true,
+            subtree: true,
+            attributeFilter: ['class']
+          });
+        }
+      }
+
+      // Safe image error handler
+      function setupImageFallbacks() {
+        document.addEventListener('error', function(e) {
+          if (e.target && e.target.tagName === 'IMG') {
+            e.target.style.opacity = '0';
+            e.target.style.visibility = 'hidden';
+            e.target.style.display = 'none';
+          }
+        }, true);
+      }
+
+      // Fullscreen Toggling Utility
+      function toggleFullscreen() {
+        var isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!isFs) {
+          var docEl = document.documentElement;
+          var rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+          if (rfs) {
+            var pr = rfs.call(docEl);
+            if (pr && pr.catch) pr.catch(function(){});
+          }
+          if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            try { screen.orientation.lock('landscape').catch(function(){}); } catch(e){}
+          }
+        } else {
+          var efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          if (efs) {
+            var pr2 = efs.call(document);
+            if (pr2 && pr2.catch) pr2.catch(function(){});
+          }
+        }
+      }
+
+      function resetToInitialState() {
+        window.__starlaFrontOpened = false;
+        window.__starlaUserInteracted = false;
+        window.__starlaVideo5gKzUnlocked = false;
+        window.__starlaAllowVideo5gKz = false;
+        isStarted = false;
+        document.body.classList.remove('starla-started');
+        document.documentElement.classList.remove('starla-started');
+        if (!stageEl) stageEl = document.getElementById('starla-front-stage');
+        if (stageEl) {
+          stageEl.style.display = 'flex';
+          stageEl.style.opacity = '1';
+          stageEl.style.pointerEvents = 'auto';
+          stageEl.style.visibility = 'visible';
+        }
+        if (typeof window.__starlaWipeResumeStorage === 'function') {
+          window.__starlaWipeResumeStorage();
+        }
+      }
+
+      window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+          window.location.reload();
+          return;
+        }
+        resetToInitialState();
+      });
+
+      // -------------------------------------------------------------------------
+      // Engine Initialization
+      // -------------------------------------------------------------------------
       function init() {
         setupImageFallbacks();
         setupMenuInterception();
-        setupVideoButtonWatcher();
+        attachFrontStageListeners();
 
-        window.addEventListener('resize', function() {
-          alignTopModalsAndCloseButtons();
-          updateOrientationAlert();
-        });
-        window.addEventListener('orientationchange', function() {
-          setTimeout(function() {
-            alignTopModalsAndCloseButtons();
-            window.dispatchEvent(new Event('resize'));
-            updateOrientationAlert();
-          }, 100);
-        });
+        window.addEventListener('resize', onDebouncedResize, { passive: true });
+        window.addEventListener('orientationchange', onDebouncedResize, { passive: true });
         if (window.screen && window.screen.orientation) {
           try {
-            window.screen.orientation.addEventListener('change', function() {
-              setTimeout(function() {
-                alignTopModalsAndCloseButtons();
-                window.dispatchEvent(new Event('resize'));
-                updateOrientationAlert();
-              }, 100);
-            });
+            window.screen.orientation.addEventListener('change', onDebouncedResize);
           } catch(e){}
         }
         if (window.visualViewport) {
-          window.visualViewport.addEventListener('resize', function() {
-            alignTopModalsAndCloseButtons();
-            window.dispatchEvent(new Event('resize'));
-            updateOrientationAlert();
-          });
+          window.visualViewport.addEventListener('resize', onDebouncedResize);
         }
-        updateOrientationAlert();
-        alignTopModalsAndCloseButtons();
 
-        // Dispatch initial resize events for responsive auto-scale
-        [100, 300, 600, 1200, 1800].forEach(function(delay) {
-          setTimeout(function() {
-            alignTopModalsAndCloseButtons();
-            window.dispatchEvent(new Event('resize'));
-          }, delay);
-        });
+        initScopedObserver();
+        applyDomTransformations();
 
-        var observer = new MutationObserver(function() {
-          bypassNativeModals();
-          alignTopModalsAndCloseButtons();
-          processFeedbackLayers();
-          sanitizeTextNodes(document.body);
-          if (window.__starlaUserInteracted) {
-            attemptVideoAutoplay();
-          }
-        });
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-        setInterval(runCycle, 250);
-        runCycle();
-
-        console.log('[StarlaBudaya] Architecture initialized successfully.');
+        console.log('[StarlaEngine] Production engine initialized cleanly.');
       }
 
       if (document.readyState === 'loading') {
@@ -2140,15 +1903,22 @@
         init();
       }
 
-      return {
+      // Public API export
+      var StarlaEngine = {
         init: init,
         getActiveRun: function() { return window.__starlaActiveRun; },
-        attemptVideoAutoplay: attemptVideoAutoplay,
+        playIntroVideos: playIntroVideos,
+        watchAndPlayVideo5gKz: watchAndPlayVideo5gKz,
         navigateToSlide: navigateToSlide,
         getCurrentSlideId: getCurrentSlideId,
-        updateOrientationAlert: updateOrientationAlert,
-        toggleFullscreen: toggleFullscreen
+        toggleFullscreen: toggleFullscreen,
+        alignTopModalsAndCloseButtons: alignTopModalsAndCloseButtons,
+        applyDomTransformations: applyDomTransformations,
+        resetToInitialState: resetToInitialState
       };
+
+      window.StarlaEngine = StarlaEngine;
+      window.StarlaBudaya = StarlaEngine; // backwards compatibility
     })();
   </script>
 
