@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#060913">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='12' y1='8' x2='52' y2='56' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%23fde047'/%3E%3Cstop offset='50%25' stop-color='%23fbbf24'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M32 6.5c1.6 0 3 .9 3.7 2.3l5.9 12 13.2 1.9c1.6.2 2.9 1.3 3.4 2.8.5 1.5.1 3.2-1 4.3l-9.6 9.3 2.3 13.1c.3 1.6-.4 3.2-1.7 4.1-1.3.9-3 1.1-4.4.3L32 50.4l-11.8 6.2c-1.4.8-3.1.6-4.4-.3-1.3-.9-2-2.5-1.7-4.1l2.3-13.1-9.6-9.3c-1.1-1.1-1.5-2.8-1-4.3.5-1.5 1.8-2.6 3.4-2.8l13.2-1.9 5.9-12C29 7.4 30.4 6.5 32 6.5Z' fill='url(%23g)' stroke='%23f59e0b' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='gold' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fef08a'/%3E%3Cstop offset='50%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23b45309'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%2307090f'/%3E%3Cpath d='M32 6 C28 14 18 24 16 34 C15 40 18 48 24 54 C26 56 30 58 32 58 C34 58 38 56 40 54 C46 48 49 40 48 34 C46 24 36 14 32 6 Z' fill='url(%23gold)' stroke='%23fbbf24' stroke-width='1.5'/%3E%3Cpath d='M32 14 L32 54 M24 38 C28 34 36 34 40 38 M22 46 C27 42 37 42 42 46' stroke='%2307090f' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='32' cy='22' r='2.5' fill='%2307090f'/%3E%3C/svg%3E">
 
   <!-- ========================================================================= -->
   <!-- STARLA CORE ENGINE: EARLY BOOTSTRAP, MEDIA BLESSING & EXCLUSIVE GATE HOOK -->
@@ -129,123 +129,6 @@
       }
       window.__starlaIsVideoIntro = isVideoIntro;
 
-      // Detection helper for Slide 6IgV5Xf2ecV (where video_5gKzK4lbTf6 lives)
-      function isSlide6IgVActive() {
-        try {
-          if (window.DS && window.DS.windowManager) {
-            var cur = window.DS.windowManager.getCurrentWindowSlide();
-            if (cur) {
-              var cid = cur.id || '';
-              if (!cid && cur.absoluteId) {
-                var p = cur.absoluteId.split('.');
-                cid = p[p.length - 1];
-              }
-              return (cid === '6IgV5Xf2ecV');
-            }
-          }
-        } catch(e){}
-        try {
-          var curSlide = document.querySelector('#slide-window .slide-container > .slide-transition-container > .slide, #slide-window .slide');
-          if (curSlide && curSlide.className) {
-            return (curSlide.className.indexOf('cs-6IgV5Xf2ecV') !== -1);
-          }
-        } catch(e){}
-        return false;
-      }
-      window.__starlaIsSlide6IgVActive = isSlide6IgVActive;
-
-      // Detection helper: verify if video_5gKzK4lbTf6 is actually open and visible (PRA-TAHAP 2)
-      function isSlideVideoActuallyOpen(videoEl) {
-        try {
-          if (!videoEl) {
-            var vids = document.querySelectorAll('video');
-            for (var i = 0; i < vids.length; i++) {
-              if (isTargetVideo5gKz(vids[i])) {
-                videoEl = vids[i];
-                break;
-              }
-            }
-          }
-          if (!videoEl || !videoEl.isConnected) return false;
-
-          // 1. Must be mounted inside #slide-window
-          var slideWin = document.getElementById('slide-window');
-          if (!slideWin || !slideWin.contains(videoEl)) return false;
-
-          // 2. Must not be inside hidden slide layer, object, or hidden container
-          if (videoEl.closest) {
-            if (videoEl.closest('.slide-layer.hidden, .slide-object.hidden, .hidden')) {
-              return false;
-            }
-            var ariaHid = videoEl.closest('[aria-hidden="true"]');
-            if (ariaHid && !ariaHid.classList.contains('slide-object-video') && !ariaHid.classList.contains('slide-object')) {
-              var aStyle = window.getComputedStyle ? window.getComputedStyle(ariaHid) : ariaHid.style;
-              if (aStyle && (aStyle.display === 'none' || aStyle.visibility === 'hidden' || parseFloat(aStyle.opacity || '1') === 0)) {
-                return false;
-              }
-            }
-          }
-
-          // 3. Must not have display:none, visibility:hidden, or opacity:0
-          var cur = videoEl;
-          while (cur && cur !== slideWin && cur !== document.body) {
-            var s = window.getComputedStyle ? window.getComputedStyle(cur) : cur.style;
-            if (s) {
-              if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity || '1') === 0) {
-                return false;
-              }
-            }
-            cur = cur.parentElement;
-          }
-
-          // 4. Must have real rendered dimensions
-          var rect = videoEl.getBoundingClientRect();
-          if (!rect || rect.width <= 10 || rect.height <= 10) return false;
-
-          // 5. Must be part of active slide
-          if (!isSlide6IgVActive()) return false;
-
-          return true;
-        } catch(e) {
-          return false;
-        }
-      }
-      window.__starlaIsSlideVideoActuallyOpen = isSlideVideoActuallyOpen;
-
-      // Helper to play target video with instant muted fallback and touch unmute
-      function playOpenTargetVideo(v) {
-        if (!v || !isSlideVideoActuallyOpen(v)) return;
-        window.__starlaExclusiveGate.allow5gKz = true;
-        v.playsInline = true;
-        v.setAttribute('playsinline', '');
-        v.setAttribute('webkit-playsinline', '');
-        v.preload = 'auto';
-        try {
-          v.muted = false;
-          v.volume = 1;
-          var p = window.__starlaOrigPlay.call(v);
-          if (p && typeof p.catch === 'function') {
-            p.catch(function(err) {
-              try {
-                v.muted = true;
-                var retry = window.__starlaOrigPlay.call(v);
-                if (retry && typeof retry.catch === 'function') retry.catch(function(){});
-              } catch(e){}
-              var unmute = function() {
-                try { v.muted = false; v.volume = 1; } catch(e){}
-                ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                  document.removeEventListener(evt, unmute, true);
-                });
-              };
-              ['pointerdown', 'touchstart', 'click'].forEach(function(evt) {
-                document.addEventListener(evt, unmute, true);
-              });
-            });
-          }
-        } catch(e){}
-      }
-      window.__starlaPlayOpenTargetVideo = playOpenTargetVideo;
-
       // 4. Hook HTMLMediaElement.prototype.play & pause (FASE 2, Point 2 & FASE 3, Point 4)
       var origPlay = HTMLMediaElement.prototype.play;
       var origPause = HTMLMediaElement.prototype.pause;
@@ -264,44 +147,25 @@
             window.__starlaMediaPool.push(self);
           }
 
-          // Exclusive Gate Check for video_5gKzK4lbTf6 (PRA-TAHAP 2)
-          if (isTargetVideo5gKz(self)) {
-            var canPlay5gKz = isSlideVideoActuallyOpen(self);
-            if (!canPlay5gKz) {
-              self.autoplay = false;
-              self.removeAttribute('autoplay');
-              try {
-                origPause.call(self);
-                self.currentTime = 0;
-              } catch(e){}
-              return Promise.resolve();
-            }
-            window.__starlaExclusiveGate.allow5gKz = true;
+          // Strict Exclusive Gate Check for video_5gKzK4lbTf6 (FASE 2, Point 2)
+          if (isTargetVideo5gKz(self) && window.__starlaExclusiveGate.allow5gKz !== true) {
+            self.autoplay = false;
+            self.removeAttribute('autoplay');
+            try { origPause.call(self); } catch(e){}
+            return Promise.resolve();
           }
 
           // Attach strict play event listener to prevent background slide triggers
           if (!self.__starlaPlayListenerAttached) {
             self.__starlaPlayListenerAttached = true;
             self.addEventListener('play', function() {
-              if (isTargetVideo5gKz(self)) {
-                var canPlay = isSlideVideoActuallyOpen(self);
-                if (!canPlay) {
-                  try {
-                    origPause.call(self);
-                    self.currentTime = 0;
-                  } catch(e){}
-                }
+              if (isTargetVideo5gKz(self) && window.__starlaExclusiveGate.allow5gKz !== true) {
+                try {
+                  origPause.call(self);
+                  self.currentTime = 0;
+                } catch(e){}
               }
             }, true);
-
-            // Listen to loadeddata & canplay to trigger autoplay immediately when open
-            ['loadeddata', 'canplay'].forEach(function(evtName) {
-              self.addEventListener(evtName, function() {
-                if (isTargetVideo5gKz(self) && isSlideVideoActuallyOpen(self) && self.paused) {
-                  playOpenTargetVideo(self);
-                }
-              });
-            });
           }
         }
 
@@ -426,22 +290,17 @@
   <!-- STARLA Budaya - Unified Responsive & State Layer Architecture Styles       -->
   <!-- ========================================================================= -->
   <style id="starla-styles">
-    /* 1. Global Reset & Frameless Viewport Precision Centering (TAHAP 2) */
+    /* 1. Global Reset & Frameless Viewport */
     html, body {
       margin: 0;
       padding: 0;
       width: 100vw;
-      width: 100dvw;
-      height: 100vh;
       height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
-      overscroll-behavior: none;
+      background: #060913;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      background: #060913;
+      overscroll-behavior: none;
       -webkit-text-size-adjust: 100%;
       user-select: none;
       -webkit-user-select: none;
@@ -458,28 +317,14 @@
       pointer-events: auto !important;
     }
 
-    /* 2. Responsive Canvas & Outer Containers (NON-DESTRUCTIVE TO STORYLINE SCALING - TAHAP 2) */
-    #preso,
-    #frame {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto !important;
-      position: relative;
-    }
-
+    /* 2. Responsive Canvas & Outer Containers (NON-DESTRUCTIVE TO STORYLINE SCALING) */
     #wrapper,
     .framewrap {
-      margin: 0 auto !important;
+      margin: 0 !important;
       padding: 0 !important;
       background: #060913 !important;
       border: none !important;
       box-shadow: none !important;
-      max-width: 100vw;
-      max-width: 100dvw;
-      max-height: 100vh;
-      max-height: 100dvh;
-      box-sizing: border-box;
     }
 
     /* 3. Hide Outer Storyline Frame Control Bars Only */
@@ -709,17 +554,6 @@
       pointer-events: none !important;
     }
 
-    /* Hide broken or empty images in modal layers (TAHAP 1) */
-    .slide-layer:not(.base-layer) img[src=""],
-    .slide-layer:not(.base-layer) img:not([src]),
-    .slide-layer:not(.base-layer) image[href=""],
-    .slide-layer:not(.base-layer) image[xlink\:href=""],
-    .slide-layer:not(.base-layer) image:not([href]):not([xlink\:href]) {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-    }
-
     /* Rectangle 1 gelap (z-index: 2 !important; pointer-events: none !important;) */
     [data-model-id="69JRqR1oNVY"],
     [data-model-id="5WpwQ6b6IF5"],
@@ -792,14 +626,6 @@
     [data-model-id="60OqR1FSbfo"],
     [data-model-id="6niCawvLG1a"],
     [data-model-id="5dFWkaH35V0"],
-    [data-model-id="5cduCNQqTlN"],
-    #acc-5cduCNQqTlN,
-    [data-model-id="5e60XlfFdPU"],
-    #acc-5e60XlfFdPU,
-    [data-model-id="5pmNQLIknke"],
-    #acc-5pmNQLIknke,
-    [data-model-id="6KsnGDQa7E6"],
-    #acc-6KsnGDQa7E6,
     [data-acc-text*="lanjut" i],
     [data-acc-text*="close" i],
     [data-acc-text*="tutup" i],
@@ -807,18 +633,6 @@
       z-index: 30 !important;
       pointer-events: auto !important;
       cursor: pointer !important;
-    }
-
-    /* Crisp Student Login Inputs */
-    [data-model-id="5pmNQLIknke"] input,
-    [data-model-id="6KsnGDQa7E6"] input,
-    .cs-slide-container input[type="text"] {
-      font-size: 18px !important;
-      touch-action: manipulation !important;
-      user-select: auto !important;
-      -webkit-user-select: auto !important;
-      pointer-events: auto !important;
-      cursor: text !important;
     }
 
     video {
@@ -893,7 +707,6 @@
         WELCOME: '5dLAzY4SKGI',
         MENU_MATERI: '5iew2M44w24',
         MENU_UTAMA: '6eHtnAfM3bY',
-        VIDEO_5GKZ: '6IgV5Xf2ecV',
         KUIS_START: '6oOWqUyP2WL',
         KUIS_CERT: '6H1Qh8g3j2r',
         GAME_START: '5a4b3c2d1e0',
@@ -911,39 +724,6 @@
       };
 
       var lastKnownSlideId = null;
-
-      function isSlide6IgVActive() {
-        if (typeof window.__starlaIsSlide6IgVActive === 'function') {
-          return window.__starlaIsSlide6IgVActive();
-        }
-        try {
-          if (window.DS && window.DS.windowManager) {
-            var cur = window.DS.windowManager.getCurrentWindowSlide();
-            if (cur) {
-              var cid = cur.id || '';
-              if (!cid && cur.absoluteId) {
-                var p = cur.absoluteId.split('.');
-                cid = p[p.length - 1];
-              }
-              return (cid === '6IgV5Xf2ecV');
-            }
-          }
-        } catch(e){}
-        try {
-          var curSlide = document.querySelector('#slide-window .slide-container > .slide-transition-container > .slide, #slide-window .slide');
-          if (curSlide && curSlide.className) {
-            return (curSlide.className.indexOf('cs-6IgV5Xf2ecV') !== -1);
-          }
-        } catch(e){}
-        return false;
-      }
-
-      function isSlideVideoActuallyOpen(videoEl) {
-        if (typeof window.__starlaIsSlideVideoActuallyOpen === 'function') {
-          return window.__starlaIsSlideVideoActuallyOpen(videoEl);
-        }
-        return false;
-      }
 
       // -------------------------------------------------------------------------
       // MODULE 1: TRUSTED TAP BRIDGE & AUDIO UNLOCK (FASE 3, Point 3 & 4)
@@ -1058,8 +838,22 @@
           }
         }, 80);
 
-        // d. Non-blocking fullscreen & landscape lock (TAHAP 3)
-        handleMobileUserInteraction();
+        // d. Non-blocking fullscreen & landscape lock (FASE 3.3.d)
+        try {
+          var docEl = document.documentElement;
+          var reqFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+          if (reqFs) {
+            var pFs = reqFs.call(docEl);
+            if (pFs && typeof pFs.catch === 'function') pFs.catch(function(){});
+          }
+        } catch(e){}
+
+        try {
+          if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            var pOri = screen.orientation.lock('landscape');
+            if (pOri && typeof pOri.catch === 'function') pOri.catch(function(){});
+          }
+        } catch(e){}
 
         // e. Smooth hide #starla-front-stage (FASE 3.3.e)
         var stage = document.getElementById('starla-front-stage');
@@ -1277,29 +1071,25 @@
         requestAnimationFrame(loop);
       }
 
-      // Auto-Relock Controller (FASE 2, Point 4 & PRA-TAHAP 2)
+      // Auto-Relock Controller (FASE 2, Point 4)
       function autoRelock5gKz() {
-        if (typeof isSlideVideoActuallyOpen === 'function' && isSlideVideoActuallyOpen()) {
-          window.__starlaExclusiveGate.allow5gKz = true;
-          return;
-        }
-        window.__starlaExclusiveGate.allow5gKz = false;
-        var vids = document.querySelectorAll('video');
-        for (var i = 0; i < vids.length; i++) {
-          if (window.__starlaIsTargetVideo5gKz(vids[i])) {
-            try {
-              vids[i].autoplay = false;
-              vids[i].removeAttribute('autoplay');
-              window.__starlaOrigPause.call(vids[i]);
-              vids[i].currentTime = 0;
-            } catch(e){}
+        if (window.__starlaExclusiveGate.allow5gKz) {
+          window.__starlaExclusiveGate.allow5gKz = false;
+          var vids = document.querySelectorAll('video');
+          for (var i = 0; i < vids.length; i++) {
+            if (window.__starlaIsTargetVideo5gKz(vids[i])) {
+              try {
+                window.__starlaOrigPause.call(vids[i]);
+                vids[i].currentTime = 0;
+              } catch(e){}
+            }
           }
         }
       }
 
       function isCloseStateButton(target) {
         if (!target) return false;
-        var closeIds = ['5cduCNQqTlN', '5ZMtYjS7oxd', '5tBmZlAoMEi', '5Zr3famKnLd', '5dFWkaH35V0', '5Z3CAwZT8J0', '60OqR1FSbfo', '6niCawvLG1a'];
+        var closeIds = ['5ZMtYjS7oxd', '5tBmZlAoMEi', '5Zr3famKnLd', '5dFWkaH35V0', '5Z3CAwZT8J0', '60OqR1FSbfo', '6niCawvLG1a'];
         for (var c = 0; c < closeIds.length; c++) {
           var cid = closeIds[c];
           if (target.closest && target.closest('[data-model-id="' + cid + '"], #acc-' + cid + ', [data-represents*="' + cid + '"]')) return true;
@@ -1308,152 +1098,11 @@
         return false;
       }
 
-      // -------------------------------------------------------------------------
-      // MODULE: LOGIN LIFECYCLE & INPUT CONTROLLER (Slide 5ml7jyaiXGc)
-      // -------------------------------------------------------------------------
-      function isSlideLoginActive() {
-        try {
-          var curId = getCurrentSlideId();
-          if (curId === '5ml7jyaiXGc' || curId === SLIDES.LOGIN) return true;
-          if (document.querySelector('.slide.cs-5ml7jyaiXGc, [data-reactid*="5ml7jyaiXGc"]')) return true;
-        } catch(e){}
-        return false;
-      }
-
-      function syncLoginInputsToStoryline() {
-        if (!window.GetPlayer) return;
-        var player = window.GetPlayer();
-        var inputNama = document.querySelector('[data-model-id="5pmNQLIknke"] input, input[placeholder*="nama" i]');
-        var inputSekolah = document.querySelector('[data-model-id="6KsnGDQa7E6"] input, input[placeholder*="sekolah" i]');
-
-        var valNama = '';
-        var valSekolah = '';
-
-        if (inputNama) {
-          valNama = (inputNama.value || '').trim();
-        } else {
-          try { valNama = (player.GetVar('TextEntry4') || '').toString().trim(); } catch(e){}
-        }
-
-        if (inputSekolah) {
-          valSekolah = (inputSekolah.value || '').trim();
-        } else {
-          try { valSekolah = (player.GetVar('TextEntry5') || '').toString().trim(); } catch(e){}
-        }
-
-        if (valNama) {
-          try { player.SetVar('TextEntry4', valNama); } catch(e){}
-          window.__starlaActiveRun.nama = valNama;
-          try { sessionStorage.setItem('starla_login_nama', valNama); } catch(e){}
-        }
-        if (valSekolah) {
-          try { player.SetVar('TextEntry5', valSekolah); } catch(e){}
-          window.__starlaActiveRun.sekolah = valSekolah;
-          try { sessionStorage.setItem('starla_login_sekolah', valSekolah); } catch(e){}
-        }
-        if (valNama && valSekolah) {
-          window.__starlaActiveRun.accountKey = buildAccountKey(valNama, valSekolah);
-        }
-      }
-
-      function triggerLoginMulai() {
-        syncLoginInputsToStoryline();
-        if (document.activeElement && typeof document.activeElement.blur === 'function') {
-          document.activeElement.blur();
-        }
-        var btn = document.querySelector('[data-model-id="5e60XlfFdPU"] button, [data-model-id="5e60XlfFdPU"] [data-accepts="events"], [data-model-id="5e60XlfFdPU"], #acc-5e60XlfFdPU');
-        if (btn) {
-          try { btn.click(); } catch(e){}
-        } else if (window.GetPlayer) {
-          var player = window.GetPlayer();
-          var n = (player.GetVar('TextEntry4') || '').toString().trim();
-          var s = (player.GetVar('TextEntry5') || '').toString().trim();
-          if (n && s) {
-            player.SetVar('cek_login', true);
-          }
-        }
-      }
-
-      function isLoginMulaiButton(target) {
-        if (!target) return false;
-        var ids = ['5e60XlfFdPU', 'acc-5e60XlfFdPU'];
-        for (var i = 0; i < ids.length; i++) {
-          var id = ids[i];
-          if (target.id === id || (target.getAttribute && target.getAttribute('data-model-id') === id)) return true;
-          if (target.closest && target.closest('[data-model-id="' + id + '"], [id="' + id + '"]')) return true;
-        }
-        if (target.getAttribute) {
-          var alt = (target.getAttribute('alt') || target.getAttribute('aria-label') || '').toLowerCase();
-          if (alt.indexOf('mulai awal') !== -1 || alt.indexOf('mulai') !== -1) return true;
-        }
-        return false;
-      }
-
-      function handleLoginDomUpdate() {
-        if (!isSlideLoginActive()) return;
-
-        var inputNama = document.querySelector('[data-model-id="5pmNQLIknke"] input, input[placeholder*="nama" i]');
-        var inputSekolah = document.querySelector('[data-model-id="6KsnGDQa7E6"] input, input[placeholder*="sekolah" i]');
-
-        if (inputNama && !inputNama.__starlaBound) {
-          inputNama.__starlaBound = true;
-          if (!inputNama.value) {
-            var savedN = window.__starlaActiveRun.nama || (window.GetPlayer ? window.GetPlayer().GetVar('TextEntry4') : '') || (sessionStorage.getItem('starla_login_nama') || '');
-            if (savedN) {
-              inputNama.value = savedN;
-              try { inputNama.dispatchEvent(new Event('input', { bubbles: true })); } catch(e){}
-            }
-          }
-          ['input', 'change', 'blur'].forEach(function(evt) {
-            inputNama.addEventListener(evt, function() {
-              syncLoginInputsToStoryline();
-            });
-          });
-          inputNama.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-              e.preventDefault();
-              if (inputSekolah) {
-                inputSekolah.focus();
-              } else {
-                triggerLoginMulai();
-              }
-            }
-          });
-        }
-
-        if (inputSekolah && !inputSekolah.__starlaBound) {
-          inputSekolah.__starlaBound = true;
-          if (!inputSekolah.value) {
-            var savedS = window.__starlaActiveRun.sekolah || (window.GetPlayer ? window.GetPlayer().GetVar('TextEntry5') : '') || (sessionStorage.getItem('starla_login_sekolah') || '');
-            if (savedS) {
-              inputSekolah.value = savedS;
-              try { inputSekolah.dispatchEvent(new Event('input', { bubbles: true })); } catch(e){}
-            }
-          }
-          ['input', 'change', 'blur'].forEach(function(evt) {
-            inputSekolah.addEventListener(evt, function() {
-              syncLoginInputsToStoryline();
-            });
-          });
-          inputSekolah.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-              e.preventDefault();
-              triggerLoginMulai();
-            }
-          });
-        }
-      }
-
-      // Global capture phase listeners for 6VpxF5tzDfS, Login Mulai & Auto-Relock (FASE 2.3 & 2.4)
+      // Global capture phase listeners for 6VpxF5tzDfS & Auto-Relock (FASE 2.3 & 2.4)
       ['pointerdown', 'touchend', 'click'].forEach(function(evtName) {
         document.addEventListener(evtName, function(e) {
           if (isButton6VpxF5tzDfS(e)) {
             handleButton6VpxPress(e);
-          } else if (isLoginMulaiButton(e.target)) {
-            syncLoginInputsToStoryline();
-            if (document.activeElement && typeof document.activeElement.blur === 'function') {
-              document.activeElement.blur();
-            }
           } else if (isCloseStateButton(e.target)) {
             autoRelock5gKz();
           }
@@ -1461,212 +1110,9 @@
       });
 
       // -------------------------------------------------------------------------
-      // TAHAP 1: MODAL BROKEN IMAGE CLEANER & RUNTIME GUARD
-      // -------------------------------------------------------------------------
-      function isProtectedModalAsset(el) {
-        if (!el) return false;
-        var str = '';
-        try {
-          if (el.currentSrc) str += el.currentSrc + ' ';
-          if (el.src) str += el.src + ' ';
-          if (typeof el.getAttribute === 'function') {
-            str += (el.getAttribute('src') || '') + ' ';
-            str += (el.getAttribute('href') || '') + ' ';
-            str += (el.getAttribute('xlink:href') || '') + ' ';
-            str += (el.getAttribute('alt') || '') + ' ';
-          }
-        } catch(e){}
-        str = str.toLowerCase();
-
-        var protectedTokens = [
-          '5gkganedbet', // 5gkgaNEdBEt.png (Modal BENAR)
-          '6cvvybugy8d', // 6cVvYbugY8D_P_246_0_1299_405.png (Modal SALAH)
-          '6efvcxuloy5', // 6EfvCxuLoY5.png (Modal STARLA BUDAYA)
-          '6ljf2bhskos', // 6ljF2bhskoS.png (Tombol tutup X)
-          '6qxlg3nylpt', // 6QxLg3NYlpt.png (Tombol LANJUT)
-          '64trbzmlqii', // 64trbzmlqII.gif (Maskot Salah)
-          '6f5z4mpnsdu', // 6F5Z4MpnsdU.gif (Maskot Benar)
-          '5xihomb2zc7', // 5xIHoMB2ZC7.gif (Karakter)
-          '5ymgs76yf4y', // 5yMgs76yF4Y.gif (Karakter)
-          '6qmyzkenwib'  // 6qmYZKenWib.png (Info)
-        ];
-
-        for (var p = 0; p < protectedTokens.length; p++) {
-          if (str.indexOf(protectedTokens[p]) !== -1) return true;
-        }
-        return false;
-      }
-
-      function cleanModalBrokenImages() {
-        try {
-          var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
-          for (var i = 0; i < layers.length; i++) {
-            var layer = layers[i];
-            var isModal = !!layer.querySelector('[src*="5gkgaNEdBEt"], [href*="5gkgaNEdBEt"], [xlink\\:href*="5gkgaNEdBEt"], [src*="6cVvYbugY8D"], [href*="6cVvYbugY8D"], [xlink\\:href*="6cVvYbugY8D"], [src*="6EfvCxuLoY5"], [href*="6EfvCxuLoY5"], [xlink\\:href*="6EfvCxuLoY5"]') ||
-                          layer.classList.contains('starla-feedback-benar') ||
-                          layer.classList.contains('starla-feedback-salah');
-            if (!isModal) continue;
-
-            // Check <img> and SVG <image>
-            var imgEls = layer.querySelectorAll('img, image');
-            for (var j = 0; j < imgEls.length; j++) {
-              var el = imgEls[j];
-              if (isProtectedModalAsset(el)) continue;
-
-              var isImg = (el.tagName && el.tagName.toUpperCase() === 'IMG');
-              var src = isImg ? (el.getAttribute('src') || '') : (el.getAttribute('href') || el.getAttribute('xlink:href') || '');
-              src = (src || '').trim();
-
-              var isBroken = false;
-              if (!src || src === '#' || src === 'about:blank') {
-                isBroken = true;
-              } else if (isImg && el.complete && el.naturalWidth === 0) {
-                isBroken = true;
-              }
-
-              if (isBroken) {
-                el.style.display = 'none';
-                if (!isImg) {
-                  try {
-                    el.setAttribute('visibility', 'hidden');
-                    el.setAttribute('width', '0');
-                    el.setAttribute('height', '0');
-                  } catch(e){}
-                }
-              }
-            }
-
-            // Also check <pattern> elements
-            var patterns = layer.querySelectorAll('pattern');
-            for (var k = 0; k < patterns.length; k++) {
-              var pat = patterns[k];
-              var pImgs = pat.querySelectorAll('image');
-              for (var pi = 0; pi < pImgs.length; pi++) {
-                var pImg = pImgs[pi];
-                if (isProtectedModalAsset(pImg)) continue;
-                var pHref = (pImg.getAttribute('href') || pImg.getAttribute('xlink:href') || '').trim();
-                if (!pHref || pHref === '#' || pHref === 'about:blank') {
-                  pImg.setAttribute('width', '0');
-                  pImg.setAttribute('height', '0');
-                }
-              }
-            }
-          }
-        } catch(e){}
-      }
-
-      // Early global error capture for broken image elements in modal layers (TAHAP 1.2)
-      window.addEventListener('error', function(e) {
-        try {
-          var target = e.target;
-          if (!target) return;
-          var tag = target.tagName ? target.tagName.toUpperCase() : '';
-          if (tag === 'IMG' || tag === 'IMAGE') {
-            var layer = target.closest && target.closest('.slide-layer:not(.base-layer)');
-            if (layer && !isProtectedModalAsset(target)) {
-              target.style.display = 'none';
-              if (tag === 'IMAGE') {
-                target.setAttribute('visibility', 'hidden');
-                target.setAttribute('width', '0');
-                target.setAttribute('height', '0');
-              }
-            }
-          }
-        } catch(err){}
-      }, true);
-
-      // -------------------------------------------------------------------------
-      // TAHAP 3: FULLSCREEN & LANDSCAPE ORIENTATION CONTROLLER
-      // -------------------------------------------------------------------------
-      function isMobileOrTouchEnvironment() {
-        try {
-          return !!(
-            (window.globals && window.globals.deviceView && window.globals.deviceView.mobile) ||
-            document.body.classList.contains('view-mobile') ||
-            document.body.classList.contains('view-phone') ||
-            document.body.classList.contains('view-tablet') ||
-            ('ontouchstart' in window) ||
-            (navigator.maxTouchPoints > 0)
-          );
-        } catch(e) {
-          return false;
-        }
-      }
-
-      function lockLandscapeOrientation() {
-        try {
-          if (screen.orientation && typeof screen.orientation.lock === 'function') {
-            var p = screen.orientation.lock('landscape');
-            if (p && typeof p.catch === 'function') p.catch(function(){});
-          } else {
-            var lockFn = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation ||
-                         (screen.orientation && (screen.orientation.lockOrientation || screen.orientation.mozLockOrientation || screen.orientation.msLockOrientation));
-            if (typeof lockFn === 'function') {
-              try { lockFn.call(screen.orientation || screen, 'landscape'); } catch(e){}
-            }
-          }
-        } catch(e){}
-      }
-
-      function requestAppFullscreen() {
-        try {
-          var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-          if (!isFs) {
-            var docEl = document.documentElement;
-            var reqFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-            if (reqFs) {
-              var pFs = reqFs.call(docEl);
-              if (pFs && typeof pFs.catch === 'function') pFs.catch(function(){});
-            }
-          }
-        } catch(e){}
-      }
-
-      function handleMobileUserInteraction() {
-        if (!isMobileOrTouchEnvironment()) return;
-        requestAppFullscreen();
-        lockLandscapeOrientation();
-      }
-
-      // Event listener for Fullscreen changes & Silent Recovery (TAHAP 3.1)
-      ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
-        document.addEventListener(evt, function() {
-          var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-          if (isFs) {
-            lockLandscapeOrientation();
-          }
-        }, false);
-      });
-
-      // Event listener for Orientation changes (TAHAP 3.2)
-      window.addEventListener('orientationchange', function() {
-        if (isMobileOrTouchEnvironment()) {
-          lockLandscapeOrientation();
-        }
-      }, false);
-
-      if (screen.orientation && screen.orientation.addEventListener) {
-        screen.orientation.addEventListener('change', function() {
-          if (isMobileOrTouchEnvironment()) {
-            lockLandscapeOrientation();
-          }
-        });
-      }
-
-      // Global capture phase pointer/touch interactions for seamless fullscreen entry & recovery
-      ['pointerdown', 'touchend'].forEach(function(evt) {
-        document.addEventListener(evt, function() {
-          handleMobileUserInteraction();
-        }, { capture: true, passive: true });
-      });
-
-      // -------------------------------------------------------------------------
       // MODULE 3: DOM HIERARCHY & LAYER MANAGER (FASE 4, Point 1)
       // -------------------------------------------------------------------------
       function applyDomTransformations() {
-        // 0. Clean broken backdrop images in modal layers (TAHAP 1)
-        cleanModalBrokenImages();
-
         // Enforce slide-layer hierarchy
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
         for (var i = 0; i < layers.length; i++) {
@@ -1691,33 +1137,41 @@
           }
         }
 
-        // Video 5gKz Autoplay Controller when opened (slide 6IgV5Xf2ecV - PRA-TAHAP 2)
-        var vids = document.querySelectorAll('video');
-        for (var vIdx = 0; vIdx < vids.length; vIdx++) {
-          var v = vids[vIdx];
-          if (window.__starlaIsTargetVideo5gKz(v)) {
-            if (isSlideVideoActuallyOpen(v)) {
-              window.__starlaExclusiveGate.allow5gKz = true;
-              if (v.paused || v.currentTime < 0.05) {
-                if (typeof window.__starlaPlayOpenTargetVideo === 'function') {
-                  window.__starlaPlayOpenTargetVideo(v);
-                }
+        // Strict Exclusive Gate Enforcement & Auto-Relock (FASE 2, Point 2 & 4)
+        if (window.__starlaExclusiveGate.allow5gKz) {
+          var vids = document.querySelectorAll('video');
+          var foundActive5gKz = false;
+          for (var vIdx = 0; vIdx < vids.length; vIdx++) {
+            var v = vids[vIdx];
+            if (window.__starlaIsTargetVideo5gKz(v)) {
+              var isHidden = false;
+              if (v.closest) {
+                if (v.closest('.slide-layer.hidden') || v.closest('.slide-object.hidden')) isHidden = true;
               }
-            } else if (!window.__starlaExclusiveGate.allow5gKz) {
-              v.autoplay = false;
-              v.removeAttribute('autoplay');
-              if (!v.paused) {
+              if (!isHidden && v.offsetParent !== null) {
+                foundActive5gKz = true;
+              }
+            }
+          }
+          if (!foundActive5gKz) {
+            autoRelock5gKz();
+          }
+        } else {
+          var vidsLocked = document.querySelectorAll('video');
+          for (var vl = 0; vl < vidsLocked.length; vl++) {
+            var vLock = vidsLocked[vl];
+            if (window.__starlaIsTargetVideo5gKz(vLock)) {
+              vLock.autoplay = false;
+              vLock.removeAttribute('autoplay');
+              if (!vLock.paused) {
                 try {
-                  window.__starlaOrigPause.call(v);
-                  v.currentTime = 0;
+                  window.__starlaOrigPause.call(vLock);
+                  vLock.currentTime = 0;
                 } catch(e){}
               }
             }
           }
         }
-
-        // Login slide dynamic enhancements
-        handleLoginDomUpdate();
 
         if (window.__starlaUserInteracted && !(window.DS && window.DS.windowManager && window.DS.windowManager.getCurrentWindowSlide())) {
           triggerStorylineStartButtons();
@@ -1781,13 +1235,6 @@
 
       function getCurrentSlideId() {
         try {
-          var activeSlideEl = document.querySelector('#slide-window .slide, #wrapper .slide, .slide');
-          if (activeSlideEl && activeSlideEl.className) {
-            var m = activeSlideEl.className.match(/\bcs-([A-Za-z0-9_]+)\b/);
-            if (m && m[1]) return m[1];
-          }
-        } catch(e){}
-        try {
           if (window.DS && window.DS.windowManager) {
             var cur = window.DS.windowManager.getCurrentWindowSlide();
             if (cur) {
@@ -1815,12 +1262,8 @@
         var curSlideId = getCurrentSlideId();
         if (curSlideId && curSlideId !== lastKnownSlideId) {
           lastKnownSlideId = curSlideId;
-          if (curSlideId === '6IgV5Xf2ecV' || curSlideId === SLIDES.VIDEO_5GKZ) {
-            window.__starlaExclusiveGate.allow5gKz = true;
-          } else {
-            // Auto-relock exclusive gate on slide transition to other slides (FASE 2, Point 4)
-            autoRelock5gKz();
-          }
+          // Auto-relock exclusive gate on slide transition (FASE 2, Point 4)
+          autoRelock5gKz();
           window.dispatchEvent(new Event('resize'));
         }
 
@@ -1883,28 +1326,17 @@
       }
 
       var StarlaCoreEngine = {
-        version: '9.3.0-mobile-exclusive',
+        version: '9.0.0-mobile-exclusive',
         init: init,
         exclusiveGate: window.__starlaExclusiveGate,
         isTargetVideo5gKz: window.__starlaIsTargetVideo5gKz,
-        isSlide6IgVActive: isSlide6IgVActive,
-        isSlideVideoActuallyOpen: isSlideVideoActuallyOpen,
-        cleanModalBrokenImages: cleanModalBrokenImages,
-        isProtectedModalAsset: isProtectedModalAsset,
-        lockLandscapeOrientation: lockLandscapeOrientation,
-        requestAppFullscreen: requestAppFullscreen,
-        isMobileOrTouchEnvironment: isMobileOrTouchEnvironment,
-        handleMobileUserInteraction: handleMobileUserInteraction,
-        isSlideLoginActive: isSlideLoginActive,
-        syncLoginInputsToStoryline: syncLoginInputsToStoryline,
         isVideoIntro: window.__starlaIsVideoIntro,
         isButton6VpxF5tzDfS: isButton6VpxF5tzDfS,
         handleFrontStageTap: handleFrontStageTap,
         autoRelock5gKz: autoRelock5gKz,
         applyDomTransformations: applyDomTransformations,
         navigateToSlide: navigateToSlide,
-        getCurrentSlideId: getCurrentSlideId,
-        SLIDES: SLIDES
+        getCurrentSlideId: getCurrentSlideId
       };
 
       window.StarlaCoreEngine = StarlaCoreEngine;
