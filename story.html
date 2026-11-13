@@ -65,14 +65,18 @@
         }, { passive: false });
       });
 
-      // Prevent double tap zoom
+      // Prevent double tap zoom (Safe: never blocks buttons, slide objects or interactive elements)
       var lastTouchEnd = 0;
       document.addEventListener('touchend', function(e) {
         var now = Date.now();
         if (now - lastTouchEnd <= 300) {
-          if (!e.target || (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
-            e.preventDefault();
+          var t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' ||
+              (t.closest && (t.closest('button') || t.closest('.slide-object') || t.closest('[data-accepts="events"]') || t.closest('#starla-front-stage'))))) {
+            lastTouchEnd = now;
+            return;
           }
+          if (e.cancelable) e.preventDefault();
         }
         lastTouchEnd = now;
       }, { passive: false });
@@ -278,7 +282,7 @@
       border: none !important;
     }
 
-    /* 4. FASE 2: Non-Destructive Mobile Start Container (Kept in DOM behind front stage until start) */
+    /* 4. Non-Destructive Mobile Start Container */
     #mobile-start-container {
       position: absolute !important;
       top: 0 !important;
@@ -289,6 +293,14 @@
       z-index: 1 !important;
       pointer-events: auto !important;
       background: transparent !important;
+    }
+
+    .starla-started #mobile-start-container,
+    #mobile-start-container.hidden {
+      display: none !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
     }
 
     .mobile-start-overlay,
@@ -329,7 +341,7 @@
       visibility: hidden !important;
     }
 
-    /* 5. FASE 3: Front Stage - Sidik Jari Amber Statis (Tap Anywhere) */
+    /* 5. Front Stage - Hyper-Realistic Biometric Amber Fingerprint (Tap Anywhere) */
     #starla-front-stage {
       position: fixed;
       inset: 0;
@@ -347,54 +359,84 @@
       -webkit-user-select: none;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.35s ease;
     }
 
-    .starla-fingerprint-wrap {
-      transform: none !important;
-      width: 110px;
-      height: 140px;
+    .starla-started #starla-front-stage {
+      display: none !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    .starla-fingerprint-box {
+      position: relative;
+      width: 120px;
+      height: 150px;
       display: flex;
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.35));
+      transform: none !important;
     }
 
-    .starla-fingerprint-wrap svg {
-      width: 110px;
-      height: 140px;
+    .starla-fingerprint-glow {
+      position: absolute;
+      width: 160px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 75%);
+      filter: blur(18px);
+      animation: bioAuraPulse 3.5s ease-in-out infinite alternate;
+      pointer-events: none;
     }
 
-    .starla-fingerprint-wrap svg path {
+    @keyframes bioAuraPulse {
+      0% { transform: scale(0.92); opacity: 0.55; }
+      100% { transform: scale(1.18); opacity: 0.95; }
+    }
+
+    .starla-fingerprint-box svg {
+      position: relative;
+      width: 120px;
+      height: 150px;
+      z-index: 2;
+      filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.45));
+    }
+
+    .starla-fingerprint-box svg path {
       fill: none;
+      stroke: url(#fpBiometricAmber);
       stroke-width: 2.2;
       stroke-linecap: round;
-      stroke: url(#fpAmberGrad);
-      stroke-dasharray: 200 60;
-      animation: fpFlowLines 5s linear infinite;
+      stroke-linejoin: round;
+      stroke-dasharray: 180 50;
+      animation: bioRidgeFlow 6s linear infinite;
     }
 
-    @keyframes fpFlowLines {
+    @keyframes bioRidgeFlow {
       0% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: -260; }
+      100% { stroke-dashoffset: -230; }
     }
 
-    .starla-tap-hint {
-      margin-top: 28px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(251, 191, 36, 0.55);
+    .starla-scanner-laser {
+      position: absolute;
+      left: 5%;
+      width: 90%;
+      height: 2px;
+      z-index: 3;
+      background: linear-gradient(90deg, transparent 0%, #fef08a 25%, #fbbf24 50%, #f59e0b 75%, transparent 100%);
+      box-shadow: 0 0 12px 2px rgba(251, 191, 36, 0.85);
+      border-radius: 999px;
       pointer-events: none;
-      animation: fpHintPulse 2.5s ease-in-out infinite;
+      animation: bioScannerSweep 3s ease-in-out infinite alternate;
     }
 
-    @keyframes fpHintPulse {
-      0%, 100% { opacity: 0.45; }
-      50% { opacity: 0.9; }
+    @keyframes bioScannerSweep {
+      0% { top: 8%; opacity: 0.25; }
+      20% { opacity: 0.9; }
+      80% { opacity: 0.9; }
+      100% { top: 92%; opacity: 0.25; }
     }
 
     /* 7. Smart Orientation Notification (Mobile Portrait) */
@@ -476,22 +518,23 @@
       line-height: 1.4;
     }
 
-    /* 8. FASE 2: Under-Layer State Backdrop (Strictly bottom-most at z-index: -1) */
+    /* 8. Slide Layers, States, Menu Buttons & Modals Hierarchy */
     .slide-layer:not(.base-layer) {
-      isolation: isolate !important;
       border-radius: 0 !important;
       background: transparent !important;
       position: absolute !important;
     }
 
+    /* Modal Backdrop */
     .starla-state-backdrop,
-    .starla-layer-backdrop {
+    .starla-layer-backdrop,
+    .layer-modal-bg {
       position: absolute !important;
       top: -50vh !important;
       left: -50vw !important;
       width: 200vw !important;
       height: 200vh !important;
-      z-index: -1 !important;
+      z-index: 1 !important;
       border-radius: 0 !important;
       pointer-events: none !important;
       background: rgba(5, 8, 17, 0.72) !important;
@@ -499,7 +542,7 @@
       -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
     }
 
-    /* LANGKAH 1: Background SVG di slide-layer ke lapisan paling belakang */
+    /* Background SVGs (SlideBackground) strictly at bottom */
     .slide-layer > svg,
     .slide-layer > svg[data-reactid] {
       position: absolute !important;
@@ -509,64 +552,97 @@
       pointer-events: none !important;
     }
 
-    .starla-state-backdrop,
-    .starla-layer-backdrop,
-    .layer-modal-bg {
-      z-index: -1 !important;
-      pointer-events: none !important;
-    }
-
-    .layer-modal-bg {
-      border-radius: 0 !important;
-      background: rgba(5, 8, 17, 0.72) !important;
-      backdrop-filter: blur(12px) saturate(130%) !important;
-      -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
-    }
-
-    /* Rectangle 1 latar gelap: z-index 2 */
+    /* Rectangle 1 modal tint: behind content, non-blocking */
     [data-model-id="69JRqR1oNVY"],
     [data-model-id="5WpwQ6b6IF5"],
     [data-model-id="6cC0Hzm97cu"],
+    [data-model-id="6O3rNruYh7J"],
+    [data-model-id="692ysfOgrrl"],
+    [data-model-id="67wByfUR3M4"],
+    [data-model-id="5Zdim6oDgtl"],
     [data-acc-text="Rectangle 1"] {
       z-index: 2 !important;
+      pointer-events: none !important;
     }
 
-    /* Background partikel feedback kuis (200.gif): z-index 5 */
+    /* Background particles/gifs */
     [data-model-id="5s5fyaUq5F5"] {
       z-index: 5 !important;
+      pointer-events: none !important;
     }
 
-    /* Seluruh .slide-object lainnya di dalam .slide-layer + objek feedback kuis: z-index 15 */
-    .slide-layer:not(.base-layer) .slide-object,
-    .slide-layer:not(.base-layer) [data-model-id],
-    .slide-layer:not(.base-layer) > *:not(.starla-state-backdrop):not(.starla-layer-backdrop):not(svg),
-    [data-model-id="6n4v1TVPYkj"],
-    [data-model-id="6iBj0j4Wyvj"],
-    [data-model-id="67BmTMfY8zv"],
-    [data-model-id="5vw6iEJUiYN"] {
-      z-index: 15 !important;
-    }
-
-    /* Aset gambar 6EfvCxuLoY5, 5ZAJjyZwSHr, 6qmYZKenWib: lapisan paling atas di states z-index 25 */
+    /* Content & illustration images in states/layers:
+       Must be non-blocking so clicks on close buttons or interactive triggers are never intercepted */
     [data-model-id="6eb4PmDsps1"],
     [data-model-id="6NmAh1Gt8vY"],
     [data-model-id="6exxdHWPhvw"],
-    [data-model-id="6EfvCxuLoY5"],
-    [data-model-id="5ZAJjyZwSHr"],
-    [data-model-id="6qmYZKenWib"],
+    [data-model-id="5cI1L3YzZim"],
+    [data-model-id="6q4ZApIYDaj"],
+    [data-model-id="6QlVJiPwrWl"],
+    [data-model-id="5vAd6TsQE7K"],
     img[src*="6EfvCxuLoY5"],
     img[src*="5ZAJjyZwSHr"],
-    img[src*="6qmYZKenWib"] {
-      z-index: 25 !important;
+    img[src*="6qmYZKenWib"],
+    [data-acc-text*="info.png"],
+    [data-acc-text*="67).png"],
+    [data-acc-text*="pralogin"] {
+      z-index: 10 !important;
+      pointer-events: none !important;
     }
 
-    /* Tombol close state: paling atas z-index 30, selalu bisa diklik */
+    /* All slide objects in layers */
+    .slide-layer:not(.base-layer) .slide-object,
+    .slide-layer:not(.base-layer) [data-model-id] {
+      z-index: 20 !important;
+    }
+
+    /* ALL interactive buttons on Menu slides (6eHtnAfM3bY & 5iew2M44w24) & Content slides:
+       Guaranteed high z-index and pointer-events auto */
+    .slide-object.use-hand,
+    .slide-object button,
+    [data-accepts="events"],
+    [data-model-id="60Y2D5T2PBN"],
+    [data-model-id="5hjfDHsqC4N"],
+    [data-model-id="5xuxdAf2iyO"],
+    [data-model-id="6UhHiuuKuan"],
+    [data-model-id="6gZ3i9V6xyz"],
+    [data-model-id="5VY7baERHMi"],
+    [data-model-id="5kREu1RQMZp"],
+    [data-model-id="5ikAyrCHttT"],
+    [data-model-id="5cPSgbCeIlr"],
+    [data-model-id="5ZPukeMFffY"],
+    [data-model-id="5Vj2vgTep1J"],
+    [data-model-id="6afmjIda5Z2"],
+    [data-model-id="5VPCvIjv1Te"],
+    [data-model-id="5goKs081cYq"],
+    [data-model-id="6n4v1TVPYkj"],
+    [data-model-id="6iBj0j4Wyvj"],
+    [data-model-id="67BmTMfY8zv"],
+    [data-model-id="5vw6iEJUiYN"],
+    [data-model-id="6VpxF5tzDfS"],
+    img[src*="6VpxF5tzDfS"],
+    img[src*="lanjut"] {
+      z-index: 30 !important;
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+
+    /* ALL Close buttons in states and layers: Topmost layer z-index 100, always clickable */
+    [data-acc-text*="7409592"],
+    img[src*="6ljF2bhskoS"],
+    [data-model-id="5Z3CAwZT8J0"],
+    [data-model-id="60OqR1FSbfo"],
+    [data-model-id="6niCawvLG1a"],
+    [data-model-id="5dFWkaH35V0"],
     [data-model-id="5ZMtYjS7oxd"],
     [data-model-id="5tBmZlAoMEi"],
     [data-model-id="5Zr3famKnLd"],
-    [data-acc-text="7409592.png"] {
-      z-index: 30 !important;
+    [data-acc-text*="close" i],
+    [data-acc-text*="tutup" i],
+    [data-acc-text*="silang" i] {
+      z-index: 100 !important;
       pointer-events: auto !important;
+      cursor: pointer !important;
     }
 
     /* Feedback layer accents */
@@ -585,29 +661,41 @@
 </head>
 <body style="background: #060913" class="cs-HTML theme-classic">
   <!-- ========================================================================= -->
-  <!-- STARLA FRONT STAGE (3D Nusantara Motion Line Art & Pure MULAI Button)     -->
+  <!-- STARLA FRONT STAGE (Hyper-Realistic Biometric Amber Fingerprint)           -->
   <!-- ========================================================================= -->
   <div id="starla-front-stage" class="starla-front-stage" role="region" aria-label="STARLA Budaya Front Stage">
-    <div class="starla-fingerprint-wrap" aria-hidden="true">
-      <svg viewBox="0 0 110 140" xmlns="http://www.w3.org/2000/svg">
+    <div class="starla-fingerprint-box" aria-hidden="true">
+      <div class="starla-fingerprint-glow"></div>
+      <div class="starla-scanner-laser"></div>
+      <svg viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="fpAmberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#fde047"/>
-            <stop offset="33%" stop-color="#fbbf24"/>
-            <stop offset="66%" stop-color="#f59e0b"/>
+          <linearGradient id="fpBiometricAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fef08a"/>
+            <stop offset="35%" stop-color="#fbbf24"/>
+            <stop offset="70%" stop-color="#f59e0b"/>
             <stop offset="100%" stop-color="#d97706"/>
           </linearGradient>
         </defs>
-        <path d="M55 130 C25 115 10 90 10 65 C10 35 30 12 55 12 C80 12 100 35 100 65 C100 90 85 115 55 130"/>
-        <path d="M55 120 C30 107 18 87 18 65 C18 40 34 20 55 20 C76 20 92 40 92 65 C92 87 80 107 55 120"/>
-        <path d="M55 110 C35 99 26 83 26 65 C26 45 38 28 55 28 C72 28 84 45 84 65 C84 83 75 99 55 110"/>
-        <path d="M55 100 C40 92 33 79 33 65 C33 50 42 36 55 36 C68 36 77 50 77 65 C77 79 70 92 55 100"/>
-        <path d="M55 90 C44 84 39 75 39 65 C39 54 46 44 55 44 C64 44 71 54 71 65 C71 75 66 84 55 90"/>
-        <path d="M55 82 C48 78 44 72 44 65 C44 58 49 51 55 51 C61 51 66 58 66 65 C66 72 62 78 55 82"/>
-        <path d="M55 74 C52 72 49 69 49 65 C49 61 52 58 55 58 C58 58 61 61 61 65 C61 69 58 72 55 74"/>
+        <path d="M 30,135 C 16,110 12,85 14,60 C 16,30 35,10 60,10 C 85,10 104,30 106,60 C 108,85 104,110 90,135"/>
+        <path d="M 36,138 C 22,112 18,87 20,62 C 22,35 38,16 60,16 C 82,16 98,35 100,62 C 102,87 98,112 84,138"/>
+        <path d="M 42,141 C 28,114 24,90 26,65 C 28,40 42,22 60,22 C 78,22 92,40 94,65 C 96,90 92,114 78,141"/>
+        <path d="M 48,143 C 34,116 30,92 32,68 C 34,45 45,28 60,28 C 75,28 86,45 88,68 C 90,92 86,116 72,143"/>
+        <path d="M 38,72 C 39,52 48,35 60,35 C 72,35 81,52 82,72 C 83,92 78,110 68,126"/>
+        <path d="M 44,75 C 45,58 51,42 60,42 C 69,42 75,58 76,75 C 77,93 72,108 64,120"/>
+        <path d="M 50,78 C 50,64 54,49 60,49 C 66,49 70,64 70,78 C 70,93 66,105 60,114"/>
+        <path d="M 55,80 C 55,70 57,56 60,56 C 63,56 65,70 65,80 C 65,90 62,98 60,105"/>
+        <path d="M 58,82 C 58,76 59,63 60,63 C 61,63 62,76 62,82 C 62,88 61,93 60,98"/>
+        <path d="M 60,69 L 60,88"/>
+        <path d="M 16,95 C 24,98 32,105 38,118"/>
+        <path d="M 104,95 C 96,98 88,105 82,118"/>
+        <path d="M 20,118 C 28,120 34,126 38,135"/>
+        <path d="M 100,118 C 92,120 86,126 82,135"/>
+        <path d="M 26,45 C 32,32 44,25 60,25 C 76,25 88,32 94,45"/>
+        <path d="M 22,78 C 24,70 28,60 35,52"/>
+        <path d="M 98,78 C 96,70 92,60 85,52"/>
+        <path d="M 46,122 C 50,126 55,130 60,132 C 65,130 70,126 74,122"/>
       </svg>
     </div>
-    <div class="starla-tap-hint">Ketuk Layar untuk Memulai</div>
   </div>
 
   <!-- Smart Orientation Alert for Mobile Portrait -->
@@ -903,13 +991,16 @@
           try { e.preventDefault(); } catch(err){}
         }
 
-        // a. SEGERA sembunyikan #starla-front-stage (synchronous, di luar Promise)
+        // a. SEGERA sembunyikan #starla-front-stage & tambahkan class starla-started
+        document.body.classList.add('starla-started');
+        document.documentElement.classList.add('starla-started');
+
         if (stageEl) {
           stageEl.style.pointerEvents = 'none';
           stageEl.style.opacity = '0';
           setTimeout(function() {
             if (stageEl) stageEl.style.display = 'none';
-          }, 300);
+          }, 200);
         }
 
         // b. Putar efek suara klik & fade-out backsound halaman depan
@@ -1324,79 +1415,71 @@
         }
       }
 
-      // LANGKAH 1: Apply Under-Layer State Backdrop & Move SVG backgrounds to back
+      // LANGKAH 1: Apply Under-Layer State Backdrop & Precise Button Accessibility
       function processFeedbackLayers() {
         var layers = document.querySelectorAll('.slide-layer:not(.base-layer)');
 
         layers.forEach(function(layer) {
-          layer.style.setProperty('isolation', 'isolate', 'important');
-
-          // Pindahkan .layer-modal-bg ke posisi anak pertama
-          var modalBg = layer.querySelector('.layer-modal-bg');
-          if (modalBg && modalBg !== layer.firstChild) {
-            layer.insertBefore(modalBg, layer.firstChild);
+          // Tambahkan backdrop tanpa merusak urutan DOM bawaan React
+          var backdrop = layer.querySelector('.starla-state-backdrop');
+          if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'starla-state-backdrop';
+            backdrop.setAttribute('aria-hidden', 'true');
+            layer.appendChild(backdrop);
           }
 
-          // Pindahkan SVG background (yang berisi rect[id^="slide-bg-"]) ke posisi anak pertama
-          var bgSvgs = layer.querySelectorAll(':scope > svg');
+          // Background SVG paksa ke lapisan 0 dan non-interaktif
+          var bgSvgs = layer.querySelectorAll('svg');
           bgSvgs.forEach(function(svgEl) {
-            var hasBgRect = svgEl.querySelector('rect[id^="slide-bg-"]') || svgEl.querySelector('pattern[id^="pattern-fill-"]');
-            if (hasBgRect || svgEl.parentNode === layer) {
+            if (svgEl.querySelector('rect[id^="slide-bg-"]') || svgEl.querySelector('pattern[id^="pattern-fill-"]') || svgEl.id.indexOf('slide-bg') !== -1) {
               svgEl.style.setProperty('position', 'absolute', 'important');
               svgEl.style.setProperty('left', '0', 'important');
               svgEl.style.setProperty('top', '0', 'important');
               svgEl.style.setProperty('z-index', '0', 'important');
               svgEl.style.setProperty('pointer-events', 'none', 'important');
-              layer.insertBefore(svgEl, layer.firstChild);
             }
           });
 
-          // Pindahkan .starla-state-backdrop ke posisi anak pertama
-          var backdrop = layer.querySelector('.starla-state-backdrop, .starla-layer-backdrop');
-          if (!backdrop) {
-            backdrop = document.createElement('div');
-            backdrop.className = 'starla-state-backdrop';
-            backdrop.setAttribute('aria-hidden', 'true');
-            layer.insertBefore(backdrop, layer.firstChild);
-          } else if (backdrop !== layer.firstChild) {
-            layer.insertBefore(backdrop, layer.firstChild);
-          }
-
-          // Atur z-index hierarki objek-objek di dalam layer
-          // Rectangle 1 latar gelap: z-index 2
-          var darkRects = layer.querySelectorAll('[data-model-id="69JRqR1oNVY"], [data-model-id="5WpwQ6b6IF5"], [data-model-id="6cC0Hzm97cu"], [data-acc-text="Rectangle 1"]');
-          darkRects.forEach(function(obj) {
-            obj.style.setProperty('z-index', '2', 'important');
+          // Modal content images (6EfvCxuLoY5, 5ZAJjyZwSHr, 6qmYZKenWib, dsb.)
+          // WAJIB pointer-events: none agar tidak memblokir tombol close atau objek interaktif lainnya
+          var contentImgs = layer.querySelectorAll('img[src*="6EfvCxuLoY5"], img[src*="5ZAJjyZwSHr"], img[src*="6qmYZKenWib"], [data-acc-text*="info.png"], [data-acc-text*="67).png"], [data-acc-text*="pralogin"]');
+          contentImgs.forEach(function(img) {
+            img.style.setProperty('pointer-events', 'none', 'important');
+            img.style.setProperty('z-index', '10', 'important');
+            var parentObj = img.closest('.slide-object');
+            if (parentObj) {
+              parentObj.style.setProperty('pointer-events', 'none', 'important');
+              parentObj.style.setProperty('z-index', '10', 'important');
+            }
           });
 
-          // Background partikel feedback kuis: z-index 5
-          var particleBg = layer.querySelectorAll('[data-model-id="5s5fyaUq5F5"]');
-          particleBg.forEach(function(obj) {
-            obj.style.setProperty('z-index', '5', 'important');
+          // SELURUH tombol close di state/layer WAJIB berada di lapisan paling atas (z-index 100) dan selalu bisa diklik
+          var closeBtns = layer.querySelectorAll('[data-acc-text*="7409592"], img[src*="6ljF2bhskoS"], [data-acc-text*="close" i], [data-acc-text*="tutup" i], [data-acc-text*="silang" i], [data-model-id="5Z3CAwZT8J0"], [data-model-id="60OqR1FSbfo"], [data-model-id="6niCawvLG1a"], [data-model-id="5dFWkaH35V0"], [data-model-id="5ZMtYjS7oxd"], [data-model-id="5tBmZlAoMEi"], [data-model-id="5Zr3famKnLd"]');
+          closeBtns.forEach(function(btn) {
+            btn.style.setProperty('z-index', '100', 'important');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('cursor', 'pointer', 'important');
+            var parentObj = btn.closest('.slide-object');
+            if (parentObj) {
+              parentObj.style.setProperty('z-index', '100', 'important');
+              parentObj.style.setProperty('pointer-events', 'auto', 'important');
+              parentObj.style.setProperty('cursor', 'pointer', 'important');
+            }
           });
 
-          // Seluruh .slide-object lainnya: z-index 15
-          var slideObjs = layer.querySelectorAll('.slide-object');
-          slideObjs.forEach(function(obj) {
-            var mid = obj.getAttribute('data-model-id') || '';
-            // Jangan timpa yang sudah diatur spesifik
-            if (mid === '69JRqR1oNVY' || mid === '5WpwQ6b6IF5' || mid === '6cC0Hzm97cu' || mid === '5s5fyaUq5F5') return;
-            if (mid === '6eb4PmDsps1' || mid === '6NmAh1Gt8vY' || mid === '6exxdHWPhvw' || mid === '6EfvCxuLoY5' || mid === '5ZAJjyZwSHr' || mid === '6qmYZKenWib') return;
-            if (mid === '5ZMtYjS7oxd' || mid === '5tBmZlAoMEi' || mid === '5Zr3famKnLd') return;
-            obj.style.setProperty('z-index', '15', 'important');
-          });
-
-          // Aset gambar utama states: z-index 25
-          var topAssets = layer.querySelectorAll('[data-model-id="6eb4PmDsps1"], [data-model-id="6NmAh1Gt8vY"], [data-model-id="6exxdHWPhvw"], [data-model-id="6EfvCxuLoY5"], [data-model-id="5ZAJjyZwSHr"], [data-model-id="6qmYZKenWib"]');
-          topAssets.forEach(function(obj) {
-            obj.style.setProperty('z-index', '25', 'important');
-          });
-
-          // Tombol close state: z-index 30
-          var closeBtns = layer.querySelectorAll('[data-model-id="5ZMtYjS7oxd"], [data-model-id="5tBmZlAoMEi"], [data-model-id="5Zr3famKnLd"], [data-acc-text="7409592.png"]');
-          closeBtns.forEach(function(obj) {
-            obj.style.setProperty('z-index', '30', 'important');
-            obj.style.setProperty('pointer-events', 'auto', 'important');
+          // Tombol lanjut feedback kuis
+          var lanjutBtns = layer.querySelectorAll('[data-model-id="67BmTMfY8zv"], [data-model-id="5vw6iEJUiYN"], img[src*="lanjut"], [data-acc-text*="lanjut" i]');
+          lanjutBtns.forEach(function(btn) {
+            btn.style.setProperty('z-index', '100', 'important');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('cursor', 'pointer', 'important');
+            var parentObj = btn.closest('.slide-object');
+            if (parentObj) {
+              parentObj.style.setProperty('z-index', '100', 'important');
+              parentObj.style.setProperty('pointer-events', 'auto', 'important');
+              parentObj.style.setProperty('cursor', 'pointer', 'important');
+            }
           });
 
           var layerHtml = layer.innerHTML || '';
@@ -1583,23 +1666,31 @@
         }
       }
 
-      // LANGKAH 4: Auto-play video_5gKzK4lbTf6 saat menekan tombol 6VpxF5tzDfS
+      // LANGKAH 4: Auto-play video_5gKzK4lbTf6 saat menekan tombol 6VpxF5tzDfS / 5ZPukeMFffY
       function setupVideoButtonWatcher() {
         function isButton6VpxF5tzDfS(target) {
           if (!target) return false;
           try {
-            if (target.closest && target.closest('[data-model-id="6VpxF5tzDfS"]')) return true;
-            if (target.closest && target.closest('#acc-6VpxF5tzDfS')) return true;
-            if (target.closest && target.closest('[data-represents*="6VpxF5tzDfS"]')) return true;
+            if (target.closest && (
+              target.closest('[data-model-id="6VpxF5tzDfS"]') ||
+              target.closest('#acc-6VpxF5tzDfS') ||
+              target.closest('[data-represents*="6VpxF5tzDfS"]') ||
+              target.closest('img[src*="6VpxF5tzDfS"]') ||
+              target.closest('[data-model-id="5ZPukeMFffY"]') ||
+              target.closest('#acc-5ZPukeMFffY') ||
+              target.closest('[data-represents*="5ZPukeMFffY"]')
+            )) return true;
           } catch(e) {}
           var curr = target;
           for (var i = 0; i < 5 && curr; i++) {
             if (curr.getAttribute) {
               var mid = curr.getAttribute('data-model-id');
-              if (mid === '6VpxF5tzDfS') return true;
-              if (curr.id === 'acc-6VpxF5tzDfS') return true;
+              if (mid === '6VpxF5tzDfS' || mid === '5ZPukeMFffY') return true;
+              if (curr.id === 'acc-6VpxF5tzDfS' || curr.id === 'acc-5ZPukeMFffY') return true;
               var rep = curr.getAttribute('data-represents');
-              if (rep && rep.indexOf('6VpxF5tzDfS') !== -1) return true;
+              if (rep && (rep.indexOf('6VpxF5tzDfS') !== -1 || rep.indexOf('5ZPukeMFffY') !== -1)) return true;
+              var src = curr.getAttribute('src');
+              if (src && src.indexOf('6VpxF5tzDfS') !== -1) return true;
             }
             curr = curr.parentElement;
           }
